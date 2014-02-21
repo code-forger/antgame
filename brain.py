@@ -1,3 +1,18 @@
+'''
+Sense sensedir st1 st2 cond	 	Go to state st1 if cond holds in sensedir;
+ 	 	and to state st2 otherwise.
+Mark i st	 	Set mark i in current cell and go to st.
+Unmark i st	 	Clear mark i in current cell and go to st.
+PickUp st1 st2	 	Pick up food from current cell and go to st1;
+ 	 	go to st2 if there is no food in the current cell.
+Drop st	 	Drop food in current cell and go to st.
+Turn lr st	 	Turn left or right and go to st.
+Move st1 st2	 	Move forward and go to st1;
+ 	 	go to st2 if the cell ahead is blocked.
+Flip p st1 st2	 	Choose a random number x from 0 to p-1;
+ 	 	go to st1 if x=0 and st2 otherwise.
+		'''
+
 class Brain:
 	def __init__(self, brain_id, states, position):
 		self.brain_id = brain_id
@@ -16,6 +31,7 @@ class Brain:
 	
 	@classmethod
 	def parse_brain(cls, filename):
+		instructions = []
 		with open(filename) as brain_file:
 			num_of_lines = len(brain_file.readlines())
 			for i, line in enumerate(brain_file.readlines()):
@@ -37,5 +53,10 @@ class Brain:
 					if words[4] == "Marker" and int(words[5]) > 6 and int(words[5]) < 0:
 						Brain.gui.show_brain_checked("The 6th word on line: " + (i + 1) + " is " + words[4] + " and should be between 1 and 6")
 						return None
+					if words[4] == "Marker":
+						instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4], int(words[5])])
+					else:
+						instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4]])
+		return instrucions
 						
 							
