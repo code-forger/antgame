@@ -32,6 +32,7 @@ class Brain:
 	@classmethod
 	def parse_brain(cls, filename):
 		instructions = []
+		success = "The file is correct!"
 		with open(filename) as brain_file:
 			num_of_lines = len(brain_file.readlines())
 			for i, line in enumerate(brain_file.readlines()):
@@ -57,6 +58,67 @@ class Brain:
 						instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4], int(words[5])])
 					else:
 						instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4]])
+				elif words[0] == "Mark":
+					if int(words[1]) < 0 or int(words[1]) > num_of_lines:
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+							return None
+					if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+						Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1]), int(words[2])]) 
+				elif words[0] == "Unmark":
+					if int(words[1]) < 0 or int(words[1]) > num_of_lines:
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+							return None
+					if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+						Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1]), int(words[2])]) 
+				elif words[0] == "PickUp":
+					if int(words[1]) < 0 or int(words[1]) > num_of_lines:
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+							return None
+					if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+						Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1]), int(words[2])]) 
+				elif words[0] == "Drop":
+					if int(words[1]) < 0 or int(words[1]) > num_of_lines:
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1])]) 
+				elif words[0] == "Turn":
+					if (words[1] not in ["Left", "Right"]):
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be either 'Left' or 'Right'.")
+						return None
+				elif words[0] == "Move":
+					if int(words[1]) < 0 or int(words[1]) > num_of_lines:
+						Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+							return None
+					if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+						Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1]), int(words[2])]) 
+				elif words[0] == "Flip":
+					if int(words[1]) < 0:
+						Brain.gui.show_brain_checked("The second number on line: " + (i + 1) + " is " + words[1] + " and should be a number no less than 0.")
+							return None
+					if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+						Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+							return None
+					if int(words[3]) < 0 or int(words[3]) > num_of_lines:
+						Brain.gui.show_brain_checked("The fourth word on line: " + (i + 1) + " is " + words[3] + " and should be between 0 and the number of states.")
+							return None
+					else:
+						instructions.append([words[0], int(words[1]), int(words[2]), int(words[3])]) 
+				else:
+					Brain.gui.show_brain_checked("The first word on line: " + (i + 1) + " is " + words[0] + " and should be  either 'Sense', 'Mark', 'Unmark', 'PickUp', 'Drop', 'Turn', 'Move', 'Flip'")
+			print success
 		return instrucions
 						
 							
