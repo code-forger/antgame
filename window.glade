@@ -27,7 +27,10 @@
                 <property name="can_focus">False</property>
                 <property name="left_padding">12</property>
                 <child>
-                  <placeholder/>
+                  <widget class="GtkDrawingArea" id="surface_pygame">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </widget>
                 </child>
               </widget>
             </child>
