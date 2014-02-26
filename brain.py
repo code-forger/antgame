@@ -46,7 +46,25 @@ class Brain:
         self._position = value
 
     def update_brain(self, world):
-        pass
+        instruction = self._states[self._state]
+
+        if self._rest_time > 0:
+            self._rest_time -= 1
+            return ["None"]
+
+        if instruction[0] == "Sense":
+            pos = self._position
+            dir = self._direction
+            color = self._color
+
+            sensed_pos = sensed_cell(pos, dir, instruction)
+
+            if cell_matches(sensed_pos, instruction[3:], color):
+                self._state = instruction[1]
+            else:
+                self._state = instruction[2]
+
+            return ["None"]
 
     def attach_gui(gui):
         Brain._gui = gui
@@ -136,3 +154,103 @@ class Brain:
                     Brain.gui.show_brain_checked("The first word on line: " + (i + 1) + " is " + words[0] + " and should be  either 'Sense', 'Mark', 'Unmark', 'PickUp', 'Drop', 'Turn', 'Move', 'Flip'")
         Brain.gui.show_brain_checked("The file is correct.")
         return instrucions
+
+#################################################
+# Convenient functions for ant brain simulation #
+#################################################
+
+
+def adjacent_cell(pos, dir):
+    """Returns the adjacent cell of position, depending on the direction."""
+    x, y = pos
+
+    even = (y % 2 == 0)
+
+    next_dir = {}
+    next_dir[0] = (x+1, y)
+    next_dir[1] = (x, y+1) if even else (x+1, y+1)
+    next_dir[2] = (x-1, y+1) if even else (x, y+1)
+    next_dir[3] = (x-1, y)
+    next_dir[4] = (x-1, y-1) if even else (x, y-1)
+    next_dir[5] = (x, y-1) if even else (x+1, y-1)
+
+    return next_dir[dir]
+
+
+def sensed_cell(pos, dir, sense_dir):
+    """Returns the coordinates of the cell being sensed."""
+    cell = {}
+    cell["Here"] = pos
+    cell["Ahead"] = adjacent_cell(pos, dir)
+    cell["LeftAhead"] = adjacent_cell(pos, turn("Left", dir))
+    cell["RightAhead"] = adjacent_cell(pos, turn("Right", dir))
+
+    return cell[sense_dir]
+
+
+def turn(dir):
+    """Returns the new turned direction."""
+    next_dir = {}
+    next_dir["Left"] = (d+5) % 6
+    next_dir["Right"] = (d+1) % 6
+
+    return next_dir[dir]
+
+
+def other_color(color):
+    """Returns the opposite color of the ant."""
+    opposite_color = {}
+    opposite_color["Red"] = "Black"
+    opposite_color["Black"] = "Red"
+
+    return opposite_color[color]
+
+
+def rocky(world, pos):
+    """Returns True if pos is rocky."""
+    x, y = pos
+    return world[x][y]['rock']
+
+
+def check_marker_at(world, pos, color, marker):
+    """Returns True if marker of color c is set in pos."""
+    x, y = pos
+    return any(m == marker and c == color for m, c in world[x][y]["markers"])
+
+
+def any_marker_at(world, pos, color):
+    """Returns True if ANY marker of color c is set in pos."""
+    x, y = pos
+    return any(c == color for m, c in world[x][y]["markers"])
+
+
+def cell_matches(world, pos, cond, color):
+    """
+    Takes a position p, a condition cond, and a color c
+    (the color of the ant that is doing the sensing), and
+    checks whether cond holds at p.
+    """
+    if rocky(world, pos):
+        return True if cond == "Rock" else False
+
+    x, y = pos
+    ant = world[x][y]["ant"]
+
+    if ant is not None:
+        ant_type = {}
+        ant_type["Friend"] = (ant.color == color)
+        ant_type["Foe"] = not ant_type["Friend"]
+        ant_type["FriendWithFood"] = ant_type["Friend"] and ant.has_food
+        ant_type["FoeWithFood"] = ant_type["Foe"] and ant.has_food
+
+        return ant_type[cond[0]]
+
+    other_type = {}
+    other_type["Food"] = world[x][y]["foods"] > 0
+    other_type["Rock"] = False
+    other_type["Marker"] = check_marker_at(world, pos, color, cond[1])
+    other_type["FoeMarker"] = any_marker_at(world, pos, other_color(color))
+    other_type["Home"] = (world[x][y]["anthill"] == color)
+    other_type["FoeHome"] = (world[x][y]["anthill"] == other_color(color))
+
+    return other_type[cond[0]]
