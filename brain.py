@@ -102,6 +102,7 @@ class Brain:
             else:
                 self._state = instruction[1]
                 self._rest_time = 14
+                move = [instruction[0]]
         elif instruction[0] == "Flip":
             rand_n = self._rand_gen(instruction[1])
             rand_state = instruction[2] if rand_n == 0 else instruction[3]
