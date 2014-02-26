@@ -35,7 +35,7 @@
               <widget class="GtkLabel" id="label1">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">&lt;b&gt;frame1&lt;/b&gt;</property>
+                <property name="label" translatable="yes">&lt;b&gt;Ant World&lt;/b&gt;</property>
                 <property name="use_markup">True</property>
               </widget>
               <packing>
@@ -65,7 +65,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <widget class="GtkButton" id="button1">
+                      <widget class="GtkButton" id="button_create_tournament">
                         <property name="label" translatable="yes">Create Tournamnt </property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -98,7 +98,7 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
-                                      <widget class="GtkFileChooserButton" id="filechooserbutton2">
+                                      <widget class="GtkFileChooserButton" id="file_chooser_load_world">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="create_folders">False</property>
@@ -111,7 +111,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkButton" id="button2">
+                                      <widget class="GtkButton" id="button_generate_world">
                                         <property name="label" translatable="yes">Generate World</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
@@ -132,7 +132,7 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <widget class="GtkLabel" id="label21">
+                                  <widget class="GtkLabel" id="label_details_of_world">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="xalign">0</property>
@@ -188,7 +188,7 @@ Food 150</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
-                                      <widget class="GtkFileChooserButton" id="filechooserbutton1">
+                                      <widget class="GtkFileChooserButton" id="file_chooser_red_brain">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                       </widget>
@@ -199,7 +199,7 @@ Food 150</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="label22">
+                                      <widget class="GtkLabel" id="label_details_of_red_brain">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="xalign">0</property>
@@ -250,7 +250,7 @@ States: 1305</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
-                                      <widget class="GtkFileChooserButton" id="filechooserbutton3">
+                                      <widget class="GtkFileChooserButton" id="file_chooser_black_brain">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                       </widget>
@@ -261,7 +261,7 @@ States: 1305</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkLabel" id="label23">
+                                      <widget class="GtkLabel" id="label_details_of_black_brain">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="xalign">1.1175870895385742e-08</property>
@@ -318,7 +318,7 @@ States: 1305</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <widget class="GtkButton" id="button6">
+                                  <widget class="GtkButton" id="button_start_game">
                                     <property name="label" translatable="yes">Start</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -337,7 +337,7 @@ States: 1305</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <child>
-                                      <widget class="GtkButton" id="button7">
+                                      <widget class="GtkButton" id="button_step_game">
                                         <property name="label" translatable="yes">Step</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
@@ -352,7 +352,7 @@ States: 1305</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <widget class="GtkButton" id="button8">
+                                      <widget class="GtkButton" id="button_pause_game">
                                         <property name="label" translatable="yes">Pause</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
@@ -384,7 +384,7 @@ States: 1305</property>
                                         <property name="can_focus">False</property>
                                         <property name="left_padding">12</property>
                                         <child>
-                                          <widget class="GtkHScale" id="hscale1">
+                                          <widget class="GtkHScale" id="slider_steps_per_sec">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="lower_stepper_sensitivity">on</property>
@@ -427,7 +427,7 @@ States: 1305</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <child>
-                                              <widget class="GtkTextView" id="textview4">
+                                              <widget class="GtkTextView" id="textview_current_step_of_game">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                               </widget>
