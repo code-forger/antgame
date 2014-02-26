@@ -1,3 +1,5 @@
+import random
+
 '''
 Sense sensedir st1 st2 cond     Go to state st1 if cond holds in sensedir;
         and to state st2 otherwise.
@@ -24,6 +26,7 @@ class Brain:
         self._position = position
         self._rest_time = 0
         self._color = color
+        self._rand_gen = make_rand_gen(random.randint(0, 10000))
 
     @property
     def color(self):
@@ -46,11 +49,17 @@ class Brain:
         self._position = value
 
     def update_brain(self, world):
+        """
+        Changes the state (excluding position) of brain, according to
+        current instruction.
+        """
         instruction = self._states[self._state]
 
         if self._rest_time > 0:
             self._rest_time -= 1
             return ["None"]
+
+        move = []
 
         if instruction[0] == "Sense":
             pos = self._position
@@ -64,7 +73,42 @@ class Brain:
             else:
                 self._state = instruction[2]
 
-            return ["None"]
+            move = ["None"]
+        elif instruction[0] == "Mark":
+            move = instruction
+            self._state = instruction[1]
+        elif instruction[0] == "Unmark":
+            move = instruction
+            self._state = instruction[1]
+        elif instruction[0] == "PickUp":
+            x, y = self.position
+
+            if self.has_food or world[x][y]["foods"] == 0:
+                self._state = instruction[2]
+            else:
+                move = [instruction[0]]
+                self._state = instruction[1]
+        elif instruction[0] == "Drop":
+            move = [instruction[0]]
+            self._state = instruction[1]
+        elif instruction[0] == "Turn":
+            move = [instruction[0]+"-"+instruction[1]]
+            self._state = instruction[1]
+        elif instruction[0] == "Move":
+            new_pos = adjacent_cell(self.position, self._direction)
+            nx, ny = new_pos
+            if rocky(new_pos) or world[nx][ny]["ant"] is not None:
+                self._state = instruction[2]
+            else:
+                self._state = instruction[1]
+                self._rest_time = 14
+        elif instruction[0] == "Flip":
+            rand_n = self._rand_gen(instruction[1])
+            rand_state = instruction[2] if rand_n == 0 else instruction[3]
+            self._state = rand_state
+            move = ["None"]
+
+        return move
 
     def attach_gui(gui):
         Brain._gui = gui
@@ -154,6 +198,7 @@ class Brain:
                     Brain.gui.show_brain_checked("The first word on line: " + (i + 1) + " is " + words[0] + " and should be  either 'Sense', 'Mark', 'Unmark', 'PickUp', 'Drop', 'Turn', 'Move', 'Flip'")
         Brain.gui.show_brain_checked("The file is correct.")
         return instrucions
+
 
 #################################################
 # Convenient functions for ant brain simulation #
@@ -254,3 +299,21 @@ def cell_matches(world, pos, cond, color):
     other_type["FoeHome"] = (world[x][y]["anthill"] == other_color(color))
 
     return other_type[cond[0]]
+
+
+def make_rand_gen(seed):
+    """Returns a predetermined pseudo rand gen based on seed."""
+    S = []
+    S.append(seed)
+
+    for i in xrange(0, 4):
+        S.append(S[-1] * 22695477 + 1)
+
+    def randomint(n):
+        if n > 0:
+            x = (S[-1] / 65536) % n
+            S.append(S[-1] * 22695477 + 1)
+
+            return int(x % n)
+
+    return randomint
