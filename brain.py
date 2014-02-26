@@ -1,17 +1,17 @@
 import random
 
 '''
-Sense sensedir st1 st2 cond     Go to state st1 if cond holds in sensedir;
+sense sensedir st1 st2 cond     Go to state st1 if cond holds in sensedir;
         and to state st2 otherwise.
-Mark i st       Set mark i in current cell and go to st.
-Unmark i st     Clear mark i in current cell and go to st.
-PickUp st1 st2      Pick up food from current cell and go to st1;
+mark i st       Set mark i in current cell and go to st.
+unmark i st     Clear mark i in current cell and go to st.
+pickup st1 st2      Pick up food from current cell and go to st1;
         go to st2 if there is no food in the current cell.
-Drop st     Drop food in current cell and go to st.
-Turn lr st      Turn left or right and go to st.
-Move st1 st2        Move forward and go to st1;
+drop st     drop food in current cell and go to st.
+turn lr st      turn left or right and go to st.
+move st1 st2        move forward and go to st1;
         go to st2 if the cell ahead is blocked.
-Flip p st1 st2      Choose a random number x from 0 to p-1;
+flip p st1 st2      Choose a random number x from 0 to p-1;
         go to st1 if x=0 and st2 otherwise.
         '''
 
@@ -53,6 +53,7 @@ class Brain:
         Changes the state (excluding position) of brain, according to
         current instruction.
         """
+        print self._states
         instruction = self._states[self._state]
 
         if self._rest_time > 0:
@@ -61,7 +62,7 @@ class Brain:
 
         move = []
 
-        if instruction[0] == "Sense":
+        if instruction[0] == "sense":
             pos = self._position
             dir = self._direction
             color = self._color
@@ -74,13 +75,13 @@ class Brain:
                 self._state = instruction[2]
 
             move = ["None"]
-        elif instruction[0] == "Mark":
+        elif instruction[0] == "mark":
             move = instruction
             self._state = instruction[1]
-        elif instruction[0] == "Unmark":
+        elif instruction[0] == "unmark":
             move = instruction
             self._state = instruction[1]
-        elif instruction[0] == "PickUp":
+        elif instruction[0] == "pickup":
             x, y = self.position
 
             if self.has_food or world[x][y]["foods"] == 0:
@@ -88,13 +89,13 @@ class Brain:
             else:
                 move = [instruction[0]]
                 self._state = instruction[1]
-        elif instruction[0] == "Drop":
+        elif instruction[0] == "drop":
             move = [instruction[0]]
             self._state = instruction[1]
-        elif instruction[0] == "Turn":
+        elif instruction[0] == "turn":
             move = [instruction[0]+"-"+instruction[1]]
             self._state = instruction[1]
-        elif instruction[0] == "Move":
+        elif instruction[0] == "move":
             new_pos = adjacent_cell(self.position, self._direction)
             nx, ny = new_pos
             if rocky(new_pos) or world[nx][ny]["ant"] is not None:
@@ -103,7 +104,7 @@ class Brain:
                 self._state = instruction[1]
                 self._rest_time = 14
                 move = [instruction[0]]
-        elif instruction[0] == "Flip":
+        elif instruction[0] == "flip":
             rand_n = self._rand_gen(instruction[1])
             rand_state = instruction[2] if rand_n == 0 else instruction[3]
             self._state = rand_state
@@ -111,94 +112,100 @@ class Brain:
 
         return move
 
-    def attach_gui(gui):
-        Brain._gui = gui
+    @classmethod
+    def attach_gui(cls, gui):
+        cls.gui = gui
 
     @classmethod
     def parse_brain(cls, filename):
         instructions = []
+        print "inner parse_brain"
         with open(filename) as brain_file:
-            num_of_lines = len(brain_file.readlines())
-            for i, line in enumerate(brain_file.readlines()):
+            print "file_open"
+            file_content = brain_file.readlines()
+            num_of_lines = len(file_content)
+            for i, line in enumerate(file_content):
                 line = line.strip()
                 words = line.split(" ")
-                if words[0] == "Sense":
-                    if (words[1] not in ["Here", "Ahead", "LeftAhead", "RightAhead"]):
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be either 'Here', 'Ahead', 'LeftAhead' or 'RightAhead'.")
+                print words[0]
+                if words[0] == "sense":
+                    if (words[1] not in ["here", "ahead", "leftahead", "rightahead"]):
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + words[1] + " and should be either 'Here', 'Ahead', 'LeftAhead' or 'RightAhead'.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + str(words[2]) + " and should be between 0 and the number of states.")
                         return None
                     if int(words[3]) < 0 and int(words[3]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[3] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + str(words[3]) + " and should be between 0 and the number of states.")
                         return None
-                    if (words[4] not in ["Friend", "Foe", "FriendWithFood", "FoewithFood", "Food", "Rock", "Marker", "FoeMarker", "Home", "ForHome"]):
-                        Brain.gui.show_brain_checked("The fifth word on line: " + (i + 1) + " is " + words[4] + " and should be either 'Friend', 'Foe', 'FriendWithFood', 'FoewithFood', 'Food', 'Rock', 'Marker', 'FoeMarker', 'Home', 'ForHome'")
+                    if (words[4] not in ["friend", "foe", "friendwithfood", "foewithfood", "food", "rock", "marker", "foemarker", "home", "foehome"]):
+                        Brain.gui.change_brain_details("The fifth word on line: " + str(i + 1) + " is " + words[4] + " and should be either 'Friend', 'Foe', 'FriendWithFood', 'FoewithFood', 'Food', 'Rock', 'marker', 'Foemarker', 'Home', 'ForHome'")
                         return None
-                    if words[4] == "Marker" and int(words[5]) > 6 and int(words[5]) < 0:
-                        Brain.gui.show_brain_checked("The 6th word on line: " + (i + 1) + " is " + words[4] + " and should be between 1 and 6")
+                    if words[4] == "marker" and int(words[5]) > 6 and int(words[5]) < 0:
+                        Brain.gui.change_brain_details("The 6th word on line: " + str(i + 1) + " is " + str(words[4]) + " and should be between 1 and 6")
                         return None
-                    if words[4] == "Marker":
+                    if words[4] == "marker":
                         instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4], int(words[5])])
                     else:
                         instructions.append([words[0], words[1], int(words[2]), int(words[3]), words[4]])
-                elif words[0] == "Mark":
+                elif words[0] == "mark":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be between 0 and the number of states.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + str(words[2]) + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1]), int(words[2])])
-                elif words[0] == "Unmark":
+                elif words[0] == "unmark":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be between 0 and the number of states.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + str(words[2]) + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1]), int(words[2])])
-                elif words[0] == "PickUp":
+                elif words[0] == "pickup":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be between 0 and the number of states.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + str(words[2]) + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1]), int(words[2])])
-                elif words[0] == "Drop":
+                elif words[0] == "drop":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1])])
-                elif words[0] == "Turn":
-                    if (words[1] not in ["Left", "Right"]):
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be either 'Left' or 'Right'.")
+                elif words[0] == "turn":
+                    if (words[1] not in ["left", "right"]):
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be either 'Left' or 'Right'.")
                         return None
                     instructions.append([words[0], words[1]])
-                elif words[0] == "Move":
+                elif words[0] == "move":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The second word on line: " + (i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1]), int(words[2])])
-                elif words[0] == "Flip":
+                elif words[0] == "flip":
                     if int(words[1]) < 0:
-                        Brain.gui.show_brain_checked("The second number on line: " + (i + 1) + " is " + words[1] + " and should be a number no less than 0.")
+                        Brain.gui.change_brain_details("The second number on line: " + str(i + 1) + " is " + words[1] + " and should be a number no less than 0.")
                         return None
                     if int(words[2]) < 0 or int(words[2]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The third word on line: " + (i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The third word on line: " + str(i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
                         return None
                     if int(words[3]) < 0 or int(words[3]) > num_of_lines:
-                        Brain.gui.show_brain_checked("The fourth word on line: " + (i + 1) + " is " + words[3] + " and should be between 0 and the number of states.")
+                        Brain.gui.change_brain_details("The fourth word on line: " + str(i + 1) + " is " + words[3] + " and should be between 0 and the number of states.")
                         return None
                     instructions.append([words[0], int(words[1]), int(words[2]), int(words[3])])
                 else:
-                    Brain.gui.show_brain_checked("The first word on line: " + (i + 1) + " is " + words[0] + " and should be  either 'Sense', 'Mark', 'Unmark', 'PickUp', 'Drop', 'Turn', 'Move', 'Flip'")
-        Brain.gui.show_brain_checked("The file is correct.")
-        return instrucions
+                    Brain.gui.change_brain_details("The first word on line: " + str(i + 1) + " is " + words[0] + " and should be  either 'sense', 'mark', 'unmark', 'pickup', 'drop', 'turn', 'move', 'flip'")
+                    return None 
+        Brain.gui.change_brain_details("The file is correct.")
+        return instructions
 
 
 #################################################
@@ -294,8 +301,8 @@ def cell_matches(world, pos, cond, color):
     other_type = {}
     other_type["Food"] = world[x][y]["foods"] > 0
     other_type["Rock"] = False
-    other_type["Marker"] = check_marker_at(world, pos, color, cond[1])
-    other_type["FoeMarker"] = any_marker_at(world, pos, other_color(color))
+    other_type["marker"] = check_marker_at(world, pos, color, cond[1])
+    other_type["Foemarker"] = any_marker_at(world, pos, other_color(color))
     other_type["Home"] = (world[x][y]["anthill"] == color)
     other_type["FoeHome"] = (world[x][y]["anthill"] == other_color(color))
 

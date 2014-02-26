@@ -90,6 +90,8 @@ class Gui:
 
 		self.label_details_of_world = get_widget("label_details_of_world")
 
+		self.label_details_of_red_brain = get_widget("label_details_of_red_brain")
+
 
 		self.area = get_widget("area_world")
 		self.area.connect("expose-event", self._draw_world)
@@ -110,8 +112,8 @@ class Gui:
 	def change_world_details(self, message):
 		gtk.idle_add(self.label_details_of_world.set_text, message)
 
-	def change_brain_details(self, message, brain):
-		exec("gtk.idle_add(self.label_details_of_" + brain + "brain.set_text, message)")
+	def change_brain_details(self, message, brain="red"):
+		exec("gtk.idle_add(self.label_details_of_" + brain + "_brain.set_text, message)")
 
 	def change_game_stats(self, stats):
 		gtk.idle_add(self.stat_controls["current_step_of_game"].set_text, "step: " + stats["current_step_of_game"])
