@@ -21,6 +21,7 @@ class Engine(Thread):
 		self._black_ants = None
 		self._red_ants = None
 		self._world = None
+		self._current_step = -1
 
 	def run(self):
 		print "Starting engine"
@@ -39,20 +40,26 @@ class Engine(Thread):
 				if (message[0]) == "load world":
 					print "loading world"
 					self._world = self._parse_world(message[1])
+					self._gui.draw_world(self._world)
 
 				if (message[0]) == "generate_world":
 					pass #TODO
 				if (message[0]) == "step_world":
-					pass
+					if self._current_step == -1:
+						for ant in self._red_ants:
+							ant._states = _red_brain
+						for ant in self._black_ants:
+							ant._states = _black_brain
+						self._current_step = 0
 			time.sleep(.001)
 
 
-	def _make_cell(self, ant=None, rock=False, markers=[], foods=0):
-		return {"ant":ant, "rock":rock, "markers":markers, "foods":foods}
+	def _make_cell(self, ant=None, rock=False, markers=[], foods=0, hill=None):
+		return {"ant":ant, "rock":rock, "markers":markers, "foods":foods, "hill":None}
 
 
 	def _parse_row_perim(self, row):
-		"""Returns a parsed row perimeter in grid."""
+		"""Returns a parsed row perimeter in world."""
 		parsed = []
 		for col in row:
 			if col == ROCK:
@@ -65,7 +72,7 @@ class Engine(Thread):
 
 
 	def _parse_row_cell(self, row, current_row):
-		"""Returns a parsed row of cells in grid."""
+		"""Returns a parsed row of cells in world."""
 		parsed = []
 
 		if row[0] == ROCK:
@@ -87,13 +94,15 @@ class Engine(Thread):
 
 				try:
 					if col == RED:
+						cell["hill"] = "red"
 						cell["ant"] = brain.Brain(self._num_of_ants,self._red_brain,(current_col-1,current_row-1), "red")
 						self._num_of_ants += 1
-						self._red_ants.append(cell.["ant"])
+						self._red_ants.append(cell["ant"])
 					elif col == BLACK:
+						cell["hill"] = "black"
 						cell["ant"] = brain.Brain(self._num_of_ants,self._black_brain,(current_col-1,current_row-1), "black")
 						self._num_of_ants += 1
-						self._black_ants.append(cell.["ant"])
+						self._black_ants.append(cell["ant"])
 					elif col == NONE:
 						pass
 					elif FOOD[0] <= int(col) <= FOOD[1]:
@@ -122,25 +131,25 @@ class Engine(Thread):
 
 
 	def _parse_world(self, path):
-		"""Returns a complete tokenized grid after parsing."""
+		"""Returns a complete tokenized world after parsing."""
 		self._num_of_ants = 0
-		self._black_ants = None
-		self._red_ants = None
+		self._black_ants = []
+		self._red_ants = []
 		# Load file in path
 		with open(path, "r") as f:
-			grid = f.readlines()
+			world = f.readlines()
 
 		# Parse dimensions at the very top
 		try:
-			num_of_cols = int(grid[0])
-			num_of_rows = int(grid[1])
+			num_of_cols = int(world[0])
+			num_of_rows = int(world[1])
 		except ValueError as err:
 			self._gui.change_world_details("Expected a number as dimension.")
 
 
 
 		# Remove unnecessary white space.
-		rows = [r.split() for r in grid[2:]]
+		rows = [r.split() for r in world[2:]]
 
 		# Check if number of rows are correct.
 		if len(rows) != num_of_rows:
@@ -158,14 +167,14 @@ class Engine(Thread):
 		if top_row == None:
 			return None
 		final.append(top_row)
-		# Parse anything between top and bottom of grid
+		# Parse anything between top and bottom of world
 		for i in xrange(1, len(rows) - 1):
 			row = self._parse_row_cell(rows[i], i+1)
 			if row == None:
 				return None
 			final.append(row)
 
-		# Parse bottom of grid
+		# Parse bottom of world
 		bottom_row = self._parse_row_perim(rows[-1])
 		if bottom_row == None:
 			return None

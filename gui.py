@@ -88,14 +88,11 @@ class Gui:
 		get_widget("slider_steps_per_sec").connect("change-value", message_to_speed_runner)
 
 
-
 		self.label_details_of_world = get_widget("label_details_of_world")
-		self.change_world_details("hello")
-		# get_widget("file_chooser_load_world")
-
-		# get_widget("button_generate_world")
 
 
+		self.area = get_widget("area_world")
+		self.area.connect("expose-event", self._draw_world)
 
 
 		messages_to_engine = []
@@ -122,6 +119,14 @@ class Gui:
 			if name == "current_step_of_game":
 				continue
 			gtk.idle_add(self.stat_controls["name"].set_text, stats["name"])
+
+	def draw_world(self, world):
+		self._world = world
+
+	def _draw_world(self, event, data=None):
+		rect = [30,30,1440,1440]
+		gc = self.area.window.new_gc()
+		self.area.window.draw_rectangle(gc, True, rect[0], rect[1], rect[2],rect[3])
 
 
 if __name__ == "__main__":
