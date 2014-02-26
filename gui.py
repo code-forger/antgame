@@ -122,7 +122,6 @@ class Gui:
 			if name == "current_step_of_game":
 				continue
 			gtk.idle_add(self.stat_controls["name"].set_text, stats["name"])
-		#TODO
 
 
 if __name__ == "__main__":
