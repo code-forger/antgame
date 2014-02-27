@@ -56,13 +56,13 @@ class Brain:
         print self._states
         instruction = self._states[self._state]
 
-        if self._rest_time > 0:
-            self._rest_time -= 1
-            return ["none"]
-
         move = []
 
-        if instruction[0] == "sense":
+        if self._rest_time > 0:
+            self._rest_time -= 1
+            move = ["none"]
+
+        elif instruction[0] == "sense":
             pos = self._position
             dir = self._direction
             color = self._color
@@ -85,6 +85,7 @@ class Brain:
             x, y = self.position
 
             if self.has_food or world[x][y]["foods"] == 0:
+                move = ["none"]
                 self._state = instruction[2]
             else:
                 move = [instruction[0]]
@@ -99,6 +100,7 @@ class Brain:
             new_pos = adjacent_cell(self.position, self._direction)
             nx, ny = new_pos
             if rocky(new_pos) or world[nx][ny]["ant"] is not None:
+                move = ["none"]
                 self._state = instruction[2]
             else:
                 self._state = instruction[1]
