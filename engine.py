@@ -12,7 +12,7 @@ class Engine(Thread):
 	def __init__(self, id, messages_from_gui, gui):
 		Thread.__init__(self)
 		self._messages_from_gui = messages_from_gui
-		
+
 		self.daemon = True
 		self._gui = gui
 
@@ -144,24 +144,24 @@ class Engine(Thread):
 		response[0] = ant.update_brain(self._world)
 		x, y = ant._position
 
-		if response[0] == "Mark":
+		if response[0] == "mark":
 			grid[x][y].markers.append(response[1])
 
-		elif response[0] == "Unmark":
+		elif response[0] == "unmark":
 			if response[1] in grid[x][y].markers:
 				grid[x][y].markers.remove(response[1])
 
-		elif response[0] == "Pickup":
+		elif response[0] == "pickup":
 			if grid[x][y].foods > 0:
 				ant._has_food = True
 				grid[x][y].foods -= 1
 
-		elif response[0] == "Drop":
+		elif response[0] == "drop":
 			if ant._has_food == True:
 				ant._has_food = False
 				grid[x][y].foods += 1
 
-		elif response[0] == "Move":
+		elif response[0] == "move":
 			new_x, new_y = self._apply_move(ant, ant._direction, x, y)
 
 			if grid[new_x][new_y].rock == False and grid[new_x][new_y].ant == None:
@@ -171,14 +171,14 @@ class Engine(Thread):
 				if self._is_alive(ant, new_x, new_y) == False:
 					grid[new_x][new_y].ant = None
 					exec("self._" + ant._color + "_ants.remove(ant)")
-	
-		elif response[0] == "Turn-Left":
+
+		elif response[0] == "turn-left":
 			if ant._direction < 5:
 				ant._direction += 1
 			else:
 				ant._direction = 0
 
-		elif response[0] == "Turn-Right":
+		elif response[0] == "turn-right":
 			if ant._direction > 0:
 				ant._direction -= 1
 			else:
@@ -187,7 +187,7 @@ class Engine(Thread):
 
 	def _apply_move(self, d, x, y):
 		"""Returns the correct move"""
-		
+
 		if y % 2 == 0:
 			if d == 0:
 				x += 1
