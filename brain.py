@@ -53,7 +53,6 @@ class Brain:
         Changes the state (excluding position) of brain, according to
         current instruction.
         """
-        print self._states
         instruction = self._states[self._state]
 
         move = []
@@ -67,20 +66,17 @@ class Brain:
             dir = self._direction
             color = self._color
 
-            sensed_pos = sensed_cell(pos, dir, instruction)
+            sensed_pos = sensed_cell(pos, dir, instruction[1])
 
-            if cell_matches(sensed_pos, instruction[3:], color):
-                self._state = instruction[1]
-            else:
+            if cell_matches(world, sensed_pos, instruction[4:], color):
                 self._state = instruction[2]
+            else:
+                self._state = instruction[3]
 
             move = ["none"]
-        elif instruction[0] == "mark":
-            move = instruction
-            self._state = instruction[1]
-        elif instruction[0] == "unmark":
-            move = instruction
-            self._state = instruction[1]
+        elif instruction[0] in ["mark", "unmark"]:
+            move = instruction[:-1]
+            self._state = instruction[2]
         elif instruction[0] == "pickup":
             x, y = self.position
 
@@ -90,16 +86,17 @@ class Brain:
             else:
                 move = [instruction[0]]
                 self._state = instruction[1]
+
         elif instruction[0] == "drop":
-            move = [instruction[0]]
+            move = [instruction[0]] if self.has_food else ["none"]
             self._state = instruction[1]
         elif instruction[0] == "turn":
             move = [instruction[0]+"-"+instruction[1]]
-            self._state = instruction[1]
+            self._state = instruction[2]
         elif instruction[0] == "move":
             new_pos = adjacent_cell(self.position, self._direction)
             nx, ny = new_pos
-            if rocky(new_pos) or world[nx][ny]["ant"] is not None:
+            if rocky(world, new_pos) or world[nx][ny]["ant"] is not None:
                 move = ["none"]
                 self._state = instruction[2]
             else:
@@ -121,9 +118,11 @@ class Brain:
     @classmethod
     def parse_brain(cls, filename):
         instructions = []
-        print "inner parse_brain"
+        print "Inner parse_brain"
+
         with open(filename) as brain_file:
-            print "file_open"
+            print "File opened:", filename
+
             file_content = brain_file.readlines()
             num_of_lines = len(file_content)
             for i, line in enumerate(file_content):
@@ -132,7 +131,6 @@ class Brain:
                 # Split instructions into strings and remove their case sensitivity.
                 words = [w.lower() for w in line.split(" ")]
 
-                print words[0]
                 if words[0] == "sense":
                     if (words[1] not in ["here", "ahead", "leftahead", "rightahead"]):
                         Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + words[1] + " and should be either 'Here', 'Ahead', 'LeftAhead' or 'RightAhead'.")
@@ -186,7 +184,12 @@ class Brain:
                     if (words[1] not in ["left", "right"]):
                         Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + str(words[1]) + " and should be either 'Left' or 'Right'.")
                         return None
-                    instructions.append([words[0], words[1]])
+
+                    if int(words[2]) < 0 or int(words[2]) > num_of_lines:
+                        Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + words[2] + " and should be between 0 and the number of states.")
+                        return None
+
+                    instructions.append([words[0], words[1], int(words[2])])
                 elif words[0] == "move":
                     if int(words[1]) < 0 or int(words[1]) > num_of_lines:
                         Brain.gui.change_brain_details("The second word on line: " + str(i + 1) + " is " + words[1] + " and should be between 0 and the number of states.")
@@ -246,13 +249,13 @@ def sensed_cell(pos, dir, sense_dir):
     return cell[sense_dir]
 
 
-def turn(dir):
+def turn(lr, dir):
     """Returns the new turned direction."""
     next_dir = {}
-    next_dir["left"] = (d+5) % 6
-    next_dir["right"] = (d+1) % 6
+    next_dir["left"] = (dir+5) % 6
+    next_dir["right"] = (dir+1) % 6
 
-    return next_dir[dir]
+    return next_dir[lr]
 
 
 def other_color(color):
@@ -267,19 +270,19 @@ def other_color(color):
 def rocky(world, pos):
     """Returns True if pos is rocky."""
     x, y = pos
-    return world[x][y]['rock']
+    return world[x][y]["rock"]
 
 
 def check_marker_at(world, pos, color, marker):
     """Returns True if marker of color c is set in pos."""
     x, y = pos
-    return any(m == marker and c == color for m, c in world[x][y]["markers"])
+    return any(m[0] == marker and m[1] == color for m in world[x][y]["markers"])
 
 
 def any_marker_at(world, pos, color):
     """Returns True if ANY marker of color c is set in pos."""
     x, y = pos
-    return any(c == color for m, c in world[x][y]["markers"])
+    return any(m[1] == color for m in world[x][y]["markers"])
 
 
 def cell_matches(world, pos, cond, color):
@@ -294,7 +297,17 @@ def cell_matches(world, pos, cond, color):
     x, y = pos
     ant = world[x][y]["ant"]
 
-    if ant is not None:
+    if cond[0] == "marker":
+        return check_marker_at(world, pos, color, cond[1])
+
+    other_type = {}
+    other_type["food"] = world[x][y]["foods"] > 0
+    other_type["rock"] = False
+    other_type["foemarker"] = any_marker_at(world, pos, other_color(color))
+    other_type["home"] = (world[x][y]["hill"] == color)
+    other_type["foehome"] = (world[x][y]["hill"] == other_color(color))
+
+    if ant is not None and cond[0] not in other_type:
         ant_type = {}
         ant_type["friend"] = (ant.color == color)
         ant_type["foe"] = not ant_type["friend"]
@@ -302,14 +315,6 @@ def cell_matches(world, pos, cond, color):
         ant_type["foewithfood"] = ant_type["foe"] and ant.has_food
 
         return ant_type[cond[0]]
-
-    other_type = {}
-    other_type["food"] = world[x][y]["foods"] > 0
-    other_type["rock"] = False
-    other_type["marker"] = check_marker_at(world, pos, color, cond[1])
-    other_type["foemarker"] = any_marker_at(world, pos, other_color(color))
-    other_type["home"] = (world[x][y]["anthill"] == color)
-    other_type["foehome"] = (world[x][y]["anthill"] == other_color(color))
 
     return other_type[cond[0]]
 

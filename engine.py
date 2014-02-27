@@ -141,35 +141,44 @@ class Engine(Thread):
 	def _update_ant(self, ant):
 		"""Returns updated world after each intruction"""
 
-		response[0] = ant.update_brain(self._world)
+		response = ant.update_brain(self._world)
 		x, y = ant._position
 
+		# NOTE: Markers also have a color associated to them
+		# e.g. a marker would look like:
+		# (1, "red")
+		# (4, "black")
+
 		if response[0] == "mark":
-			grid[x][y].markers.append(response[1])
+			# TODO: Please revise as it was just a quick fix
+			# Delete TODO comment if it seems fine
+			self._world[x][y]["markers"].append((response[1], ant.color))
 
 		elif response[0] == "unmark":
-			if response[1] in grid[x][y].markers:
-				grid[x][y].markers.remove(response[1])
+			# TODO: Please revise as it was just a quick fix
+			# Delete TODO comment if it seems fine
+			if (response[1], ant.color) in self._world[x][y]["markers"]:
+				self._world[x][y]["markers"].remove((response[1], ant.color))
 
 		elif response[0] == "pickup":
-			if grid[x][y].foods > 0:
+			if self._world[x][y]["foods"] > 0:
 				ant._has_food = True
-				grid[x][y].foods -= 1
+				self._world[x][y]["foods"] -= 1
 
 		elif response[0] == "drop":
 			if ant._has_food == True:
 				ant._has_food = False
-				grid[x][y].foods += 1
+				self._world[x][y]["foods"] += 1
 
 		elif response[0] == "move":
-			new_x, new_y = self._apply_move(ant, ant._direction, x, y)
+			new_x, new_y = self._apply_move(ant._direction, x, y)
 
-			if grid[new_x][new_y].rock == False and grid[new_x][new_y].ant == None:
-				grid[x][y].ant = None
-				grid[new_x][new_y].ant = ant
+			if self._world[new_x][new_y]["rock"] == False and self._world[new_x][new_y]["ant"] == None:
+				self._world[x][y]["ant"] = None
+				self._world[new_x][new_y]["ant"] = ant
 				ant._position = new_x, new_y
 				if self._is_alive(ant, new_x, new_y) == False:
-					grid[new_x][new_y].ant = None
+					self._world[new_x][new_y]["ant"] = None
 					exec("self._" + ant._color + "_ants.remove(ant)")
 
 		elif response[0] == "turn-left":
@@ -237,10 +246,10 @@ class Engine(Thread):
 		"""Checks if ant is still alive after move"""
 
 		if y % 2 == 0:
-			if sum([0 if grid[xx][yy].ant == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1))]) >= 5:
+			if sum([0 if self._world[xx][yy]["ant"] == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1))]) >= 5:
 				return False
 		else:
-			if sum([0 if grid[xx][yy].ant == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1))]) >= 5:
+			if sum([0 if self._world[xx][yy]["ant"] == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1))]) >= 5:
 				return False
 
 		return True
