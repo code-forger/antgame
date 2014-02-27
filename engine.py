@@ -168,6 +168,7 @@ class Engine(Thread):
 		elif response[0] == "drop":
 			if ant._has_food == True:
 				ant._has_food = False
+
 				self._world[x][y]["foods"] += 1
 
 		elif response[0] == "move":
@@ -253,10 +254,6 @@ class Engine(Thread):
 				return False
 
 		return True
-
-
-	def parse_grid(self, path):
-		"""Returns a complete tokenized grid after parsing."""
 
 	def _parse_world(self, path):
 		"""Returns a complete tokenized world after parsing."""
