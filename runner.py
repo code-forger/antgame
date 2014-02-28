@@ -9,7 +9,7 @@ class Runner(Thread):
 		self.daemon = True
 		
 		self._running = False
-		self._speed = False
+		self._speed = 1
 		
 		self._timeout = False
 

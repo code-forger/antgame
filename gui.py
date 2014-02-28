@@ -3,7 +3,6 @@ import runner
 import engine
 import brain
 import gui
-import pygame
 import pygtk
 pygtk.require('2.0')
 import gtk
@@ -92,19 +91,21 @@ class Gui:
 
 		self.label_details_of_red_brain = get_widget("label_details_of_red_brain")
 
-
-		self.area = get_widget("area_world")
-		self.area.connect("expose-event", self._draw_world)
-
-
 		messages_to_engine = []
 		messages_to_runner = []
-		game_engine = engine.Engine(0,messages_to_engine, self)
+		messages_between_engine_and_renderer = []
+		game_engine = engine.Engine(0,messages_to_engine, messages_between_engine_and_renderer, self)
 		game_engine.start()
 
+		world_renderer = renderer.Renderer(messages_between_engine_and_renderer)
+		world_renderer.start()
 		runner_speed = 1
 		engine_runner = runner.Runner(messages_to_runner, messages_to_engine)
 		engine_runner.start()
+
+		messages_to_engine.append(["load world", "3.world"])
+		messages_to_engine.append(["load brain", "cleverbrain1.brain", "red"])
+		messages_to_engine.append(["load brain", "cleverbrain1.brain", "black"])
 
 		window_main.show()
 		gtk.main()
@@ -121,14 +122,6 @@ class Gui:
 			if name == "current_step_of_game":
 				continue
 			gtk.idle_add(self.stat_controls["name"].set_text, stats["name"])
-
-	def draw_world(self, world):
-		self._world = world
-
-	def _draw_world(self, event, data=None):
-		rect = [30,30,1440,1440]
-		gc = self.area.window.new_gc()
-		self.area.window.draw_rectangle(gc, True, rect[0], rect[1], rect[2],rect[3])
 
 
 if __name__ == "__main__":

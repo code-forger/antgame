@@ -307,6 +307,11 @@ def cell_matches(world, pos, cond, color):
     other_type["home"] = (world[x][y]["hill"] == color)
     other_type["foehome"] = (world[x][y]["hill"] == other_color(color))
 
+    other_type["friend"] = False
+    other_type["foe"] = False
+    other_type["friendwithfood"] = False
+    other_type["foewithfood"] = False
+
     if ant is not None and cond[0] not in other_type:
         ant_type = {}
         ant_type["friend"] = (ant.color == color)

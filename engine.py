@@ -9,9 +9,10 @@ NONE = "."
 RED = "+"
 
 class Engine(Thread):
-	def __init__(self, id, messages_from_gui, gui):
+	def __init__(self, id, messages_from_gui, messages_to_renderer, gui):
 		Thread.__init__(self)
 		self._messages_from_gui = messages_from_gui
+		self._messages_to_renderer = messages_to_renderer
 
 		self.daemon = True
 		self._gui = gui
@@ -40,7 +41,7 @@ class Engine(Thread):
 
 				elif (message[0]) == "load world":
 					self._world = self._parse_world(message[1])
-					self._gui.draw_world(self._world)
+					self._messages_to_renderer.append(["draw_world", self._world])
 
 				elif (message[0]) == "generate world":
 					pass #TODO
@@ -59,11 +60,12 @@ class Engine(Thread):
 					for ant in self._black_ants:
 						self._update_ant(ant)
 					self._current_step += 1
+					self._messages_to_renderer.append(["draw_world", self._world])
 			time.sleep(.001)
 
 
 	def _make_cell(self, ant=None, rock=False, markers=[], foods=0, hill=None):
-		return {"ant":ant, "rock":rock, "markers":markers, "foods":foods, "hill":None}
+		return {"ant":ant, "rock":rock, "markers":[], "foods":foods, "hill":None}
 
 
 	def _parse_row_perim(self, row):
@@ -103,12 +105,12 @@ class Engine(Thread):
 				try:
 					if col == RED:
 						cell["hill"] = "red"
-						cell["ant"] = brain.Brain(self._num_of_ants,self._red_brain,(current_col-1,current_row-1), "red")
+						cell["ant"] = brain.Brain(self._num_of_ants,self._red_brain,(current_row-1,current_col-1), "red")
 						self._num_of_ants += 1
 						self._red_ants.append(cell["ant"])
 					elif col == BLACK:
 						cell["hill"] = "black"
-						cell["ant"] = brain.Brain(self._num_of_ants,self._black_brain,(current_col-1,current_row-1), "black")
+						cell["ant"] = brain.Brain(self._num_of_ants,self._black_brain,(current_row-1,current_col-1), "black")
 						self._num_of_ants += 1
 						self._black_ants.append(cell["ant"])
 					elif col == NONE:
@@ -153,6 +155,7 @@ class Engine(Thread):
 			# TODO: Please revise as it was just a quick fix
 			# Delete TODO comment if it seems fine
 			self._world[x][y]["markers"].append((response[1], ant.color))
+			print self._world[0][0]["markers"]
 
 		elif response[0] == "unmark":
 			# TODO: Please revise as it was just a quick fix
