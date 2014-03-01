@@ -25,15 +25,23 @@ class Engine(Thread):
 		self._current_step = -1
 		brain.Brain.attach_gui(gui)
 
+		self._game_stats = {"current_step_of_game":0,
+						   "red_alive":0,
+						   "black_alive":0,
+						   "red_dead_redemption":0,
+						   "black_dead":0,
+						   "red_carrying":0,
+						   "black_carrying":0,
+						   "red_stored":0,
+						   "black_stored":0}
+
 	def run(self):
-		print "Starting engine"
 		while True:
 			if len(self._messages_from_gui) > 0:
 				message = self._messages_from_gui.pop(0)
-				print message[0]
 
 				if (message[0]) == "load brain":
-					ant_brain = brain.Brain.parse_brain(message[1])
+					ant_brain = brain.Brain.parse_brain(message[1], message[2])
 					if (message[2]) == "red":
 						self._red_brain = ant_brain
 					elif  (message[2]) == "black":
@@ -42,25 +50,37 @@ class Engine(Thread):
 				elif (message[0]) == "load world":
 					self._world = self._parse_world(message[1])
 					self._messages_to_renderer.append(["draw_world", self._world])
+					self._game_stats["red_alive"] = len(self._red_ants)
+					self._game_stats["black_alive"] = len(self._black_ants)
+					self._gui.change_game_stats(self._game_stats)
 
 				elif (message[0]) == "generate world":
 					pass #TODO
 				elif (message[0]) == "step world":
-					print "STEPPING VORLD"
+					
 					if self._current_step == -1:
 						for ant in self._red_ants:
-							print len(self._red_brain)
 							ant._states = self._red_brain
 						for ant in self._black_ants:
-							print len(self._black_brain)
 							ant._states = self._black_brain
 						self._current_step = 0
-					for ant in self._red_ants:
-						self._update_ant(ant)
-					for ant in self._black_ants:
-						self._update_ant(ant)
-					self._current_step += 1
-					self._messages_to_renderer.append(["draw_world", self._world])
+					elif self._current_step == 30000:
+						self._gui.change_game_stats(self._game_stats)
+					else:
+						for ant in self._red_ants:
+							if ant.alive:
+								self._update_ant(ant)
+							else:
+								self._red_ants.remove(ant)
+						for ant in self._black_ants:
+							if ant.alive:
+								self._update_ant(ant)
+							else:
+								self._black_ants.remove(ant)
+						self._current_step += 1
+						self._game_stats["current_step_of_game"] = self._current_step
+						self._messages_to_renderer.append(["draw_world", self._world])
+						self._gui.change_game_stats(self._game_stats)
 			time.sleep(.001)
 
 
@@ -142,7 +162,6 @@ class Engine(Thread):
 
 	def _update_ant(self, ant):
 		"""Returns updated world after each intruction"""
-
 		response = ant.update_brain(self._world)
 		x, y = ant._position
 
@@ -155,7 +174,6 @@ class Engine(Thread):
 			# TODO: Please revise as it was just a quick fix
 			# Delete TODO comment if it seems fine
 			self._world[x][y]["markers"].append((response[1], ant.color))
-			print self._world[0][0]["markers"]
 
 		elif response[0] == "unmark":
 			# TODO: Please revise as it was just a quick fix
@@ -167,12 +185,17 @@ class Engine(Thread):
 			if self._world[x][y]["foods"] > 0:
 				ant._has_food = True
 				self._world[x][y]["foods"] -= 1
+				self._game_stats[ant.color + "_carrying"] += 1
 
 		elif response[0] == "drop":
 			if ant._has_food == True:
 				ant._has_food = False
 
 				self._world[x][y]["foods"] += 1
+				self._game_stats[ant.color + "_carrying"] -= 1
+				if self._world[x][y]["hill"]:
+					self._game_stats[self._world[x][y]["hill"] + "_stored"] += 1
+
 
 		elif response[0] == "move":
 			new_x, new_y = self._apply_move(ant._direction, x, y)
@@ -182,8 +205,16 @@ class Engine(Thread):
 				self._world[new_x][new_y]["ant"] = ant
 				ant._position = new_x, new_y
 				if self._is_alive(ant, new_x, new_y) == False:
+					self._world[new_x][new_y]["ant"].alive = False
 					self._world[new_x][new_y]["ant"] = None
-					exec("self._" + ant._color + "_ants.remove(ant)")
+					if (ant._color == "red"):
+						self._game_stats["red_dead_redemption"] += 1
+						self._game_stats["red_alive"] -= 1
+						self._red_ants.remove(ant)
+					else:
+						self._game_stats["black_dead"] += 1
+						self._game_stats["black_alive"] -= 1
+						self._black_ants.remove(ant)
 
 		elif response[0] == "turn-left":
 			if ant._direction < 5:
@@ -250,10 +281,10 @@ class Engine(Thread):
 		"""Checks if ant is still alive after move"""
 
 		if y % 2 == 0:
-			if sum([0 if self._world[xx][yy]["ant"] == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1))]) >= 5:
+			if sum([1 if (self._world[xx][yy]["ant"] != None and self._world[xx][yy]["ant"].color != ant.color) else 0 for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1))]) >= 5:
 				return False
 		else:
-			if sum([0 if self._world[xx][yy]["ant"] == None else 1 for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1))]) >= 5:
+			if sum([1 if (self._world[xx][yy]["ant"] != None and self._world[xx][yy]["ant"].color != ant.color) else 0 for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1))]) >= 5:
 				return False
 
 		return True
@@ -310,5 +341,8 @@ class Engine(Thread):
 		final.append(bottom_row)
 
 
-		self._gui.change_world_details("done")
+		self._gui.change_world_details("File: " + path + "\n" + 
+									   "Size: 150 * 150\n" + 
+									   "Ants: " + str(len(self._red_ants) + len(self._black_ants)) + "\n"
+									   "Foods: XXX")
 		return final

@@ -8,7 +8,6 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import glib
-print "imports done"
 
 class Gui:
 	def __init__(self):
@@ -17,12 +16,8 @@ class Gui:
 		def window_main_destroy(widget, data=None):
 			gtk.main_quit()
 
-		def print_message(widget, data=None):
-			print("message")
-
 		def message_to_generate_world(widget, data=None):
 			messages_to_engine.append(["generate world"])
-			print messages_to_engine
 
 		def message_to_load_world(widget, data=None):
 			messages_to_engine.append(["load world", widget.get_filename()])
@@ -41,7 +36,6 @@ class Gui:
 
 		def message_to_speed_runner(range, scroll, value, data=None):
 			messages_to_runner.append(["speed", int(value)])
-			print value
 
 		def message_to_step_engine(widget, data=None):
 			messages_to_engine.append(["step world"])
@@ -64,9 +58,9 @@ class Gui:
 					     "red_stored",
 					     "black_stored"]
 
-		stats = {}
+		self._stats = {}
 		for name in stat_controls:
-			stats[name] = get_widget("label_"+name)
+			self._stats[name] = get_widget("label_"+name)
 
 
 
@@ -90,9 +84,10 @@ class Gui:
 		self.label_details_of_world = get_widget("label_details_of_world")
 
 		self.label_details_of_red_brain = get_widget("label_details_of_red_brain")
+		self.label_details_of_black_brain = get_widget("label_details_of_black_brain")
 
 		messages_to_engine = []
-		messages_to_runner = []
+		self._messages_to_runner = messages_to_runner = []
 		messages_between_engine_and_renderer = []
 		game_engine = engine.Engine(0,messages_to_engine, messages_between_engine_and_renderer, self)
 		game_engine.start()
@@ -108,6 +103,8 @@ class Gui:
 		messages_to_engine.append(["load brain", "cleverbrain1.brain", "black"])
 
 		window_main.show()
+
+		window_main.set_keep_above(True)
 		gtk.main()
 		
 	def change_world_details(self, message):
@@ -117,11 +114,15 @@ class Gui:
 		exec("gtk.idle_add(self.label_details_of_" + brain + "_brain.set_text, message)")
 
 	def change_game_stats(self, stats):
-		gtk.idle_add(self.stat_controls["current_step_of_game"].set_text, "step: " + stats["current_step_of_game"])
-		for name in stat_controls.keys():
+		if stats["current_step_of_game"] == 30000:
+			gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
+			self._messages_to_runner.append(["stop"])
+		else:
+			gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
+		for name in self._stats.keys():
 			if name == "current_step_of_game":
 				continue
-			gtk.idle_add(self.stat_controls["name"].set_text, stats["name"])
+			gtk.idle_add(self._stats[name].set_text, str(stats[name]))
 
 
 if __name__ == "__main__":

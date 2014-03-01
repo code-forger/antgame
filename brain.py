@@ -26,6 +26,7 @@ class Brain:
         self._position = position
         self._rest_time = 0
         self._color = color
+        self.alive = True
         self._rand_gen = make_rand_gen(random.randint(0, 10000))
 
     @property
@@ -116,12 +117,10 @@ class Brain:
         cls.gui = gui
 
     @classmethod
-    def parse_brain(cls, filename):
+    def parse_brain(cls, filename, color):
         instructions = []
-        print "Inner parse_brain"
 
         with open(filename) as brain_file:
-            print "File opened:", filename
 
             file_content = brain_file.readlines()
             num_of_lines = len(file_content)
@@ -212,7 +211,8 @@ class Brain:
                 else:
                     Brain.gui.change_brain_details("The first word on line: " + str(i + 1) + " is " + words[0] + " and should be  either 'sense', 'mark', 'unmark', 'pickup', 'drop', 'turn', 'move', 'flip'")
                     return None
-        Brain.gui.change_brain_details("The file is correct.")
+        Brain.gui.change_brain_details("File: " + filename + "\n" +
+                                       "States: " + str(len(instructions)), brain=color)
         return instructions
 
 
