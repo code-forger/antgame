@@ -1,0 +1,25 @@
+:: Windows Development Setup ::
+
+Dependencies:
+    - A PyGame 32 bit installer
+        - http://pygame.org/ftp/pygame-1.9.1.win32-py2.7.msi
+    - A Python 2.7 32 bit interpreter (Default directory should be C:\Python27)
+    - PyGTK all-in-one installer
+         - http://ftp.gnome.org/pub/GNOME/binaries/win32/pygtk/2.24/pygtk-all-in-one-2.24.2.win32-py2.7.msi
+    - Bazaar Version Control System.
+
+Assumptions:
+    - Python is in your PATH (Check Control Panel -> Environment Variables)
+        - e.g. PATH should have (C:\Python27)
+    - Bazaar is in your PATH (Check Control Panel -> Environment Variables)
+
+Instructions:
+    1. Open File Explorer.
+    2. Go to directory where your python files are.
+    3. Type 'cmd' in explorer's address bar. A command line should pop up,
+        with the current directory in place.
+    4. Install Sam's Gay Tool:
+        - Type 'bzr branch https://launchpad.net/simplegc/stable sgc && cd sgc && python setup.py install && cd .. && rd /S /Q sgc'
+          into the command line.
+    4. Type 'python ant.py' in command line.
+    5. Done.
