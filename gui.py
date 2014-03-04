@@ -44,10 +44,23 @@ class Gui:
 		window_main_layout = "window.glade"
 		window_main_layout_tree = gtk.glade.XML(window_main_layout)
 		get_widget = window_main_layout_tree.get_widget
+		
+		tab1_main_layout = "tab1.glade"
+		tab1_main_layout_tree = gtk.glade.XML(tab1_main_layout)
+		get_tab1_widget = tab1_main_layout_tree.get_widget
+		
+		tab2_main_layout = "tab2.glade"
+		tab2_main_layout_tree = gtk.glade.XML(tab2_main_layout)
+		get_tab2_widget = tab2_main_layout_tree.get_widget
 
 		window_main = get_widget("window_main")
 		window_main.connect("destroy", window_main_destroy)
 		
+		notepad = get_widget("tabs")
+		
+		notepad.append_page(get_tab1_widget("top"), gtk.Label("1v1"))
+		notepad.append_page(get_tab2_widget("top"), gtk.Label("Tournament"))
+	
 		stat_controls = ["current_step_of_game",
 					     "red_alive",
 					     "black_alive",
@@ -60,31 +73,31 @@ class Gui:
 
 		self._stats = {}
 		for name in stat_controls:
-			self._stats[name] = get_widget("label_"+name)
+			self._stats[name] = get_tab1_widget("label_"+name)
 
 
 
-		get_widget("button_generate_world").connect("clicked", message_to_generate_world)
+		get_tab1_widget("button_generate_world").connect("clicked", message_to_generate_world)
 
-		get_widget("file_chooser_load_world").connect("file-set", message_to_load_world)
+		get_tab1_widget("file_chooser_load_world").connect("file-set", message_to_load_world)
 
-		get_widget("file_chooser_red_brain").connect("file-set", message_to_load_red_brain)
+		get_tab1_widget("file_chooser_red_brain").connect("file-set", message_to_load_red_brain)
 
-		get_widget("file_chooser_black_brain").connect("file-set", message_to_load_black_brain)
+		get_tab1_widget("file_chooser_black_brain").connect("file-set", message_to_load_black_brain)
 
-		get_widget("button_start_game").connect("clicked", message_to_start_runner)
+		get_tab1_widget("button_start_game").connect("clicked", message_to_start_runner)
 
-		get_widget("button_step_game").connect("clicked", message_to_step_engine)		
+		get_tab1_widget("button_step_game").connect("clicked", message_to_step_engine)		
 
-		get_widget("button_pause_game").connect("clicked", message_to_stop_runner)
+		get_tab1_widget("button_pause_game").connect("clicked", message_to_stop_runner)
 
-		get_widget("slider_steps_per_sec").connect("change-value", message_to_speed_runner)
+		get_tab1_widget("slider_steps_per_sec").connect("change-value", message_to_speed_runner)
 
 
-		self.label_details_of_world = get_widget("label_details_of_world")
+		self.label_details_of_world = get_tab1_widget("label_details_of_world")
 
-		self.label_details_of_red_brain = get_widget("label_details_of_red_brain")
-		self.label_details_of_black_brain = get_widget("label_details_of_black_brain")
+		self.label_details_of_red_brain = get_tab1_widget("label_details_of_red_brain")
+		self.label_details_of_black_brain = get_tab1_widget("label_details_of_black_brain")
 
 		messages_to_engine = []
 		self._messages_to_runner = messages_to_runner = []
