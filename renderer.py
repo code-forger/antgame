@@ -192,3 +192,4 @@ class Renderer(threading.Thread):
         pygame.draw.line(window, color, (x*size+sx,(y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
         pygame.draw.line(window, color, ((x+2)*size+sx, y*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
         pygame.draw.line(window, color, ((x+4)*size+sx, (y+1)*size+sy), ((x)*size+sx, (y+3)*size+sy))
+
