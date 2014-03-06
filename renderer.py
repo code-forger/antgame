@@ -60,22 +60,24 @@ class Renderer(threading.Thread):
             if len(self._messages_from_engine) > 0:
                 message = self._messages_from_engine.pop(0)
                 if message[0] == "draw_world":
-                    self._world = message[1]
+                    self._world = message[1]    
 
-            overlay.fill((255,255,255,0))
+                    overlay.fill((255,255,255,0))
 
 
-            for x in range(150):
-                for y in range(150):
-                    if self._world:
-                        if len(self._world[x][y]["markers"]):
-                            self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
-                        if self._world[x][y]["rock"]:
-                            self._draw_rock(overlay, x, y, SIZE, 0,0)
-                        if self._world[x][y]["foods"]>0:
-                            self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
-                        if self._world[x][y]["ant"]:
-                            self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
+                    for x in range(150):
+                        for y in range(150):
+                            if self._world:
+                                if len(self._world[x][y]["markers"]):
+                                    self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
+                                if self._world[x][y]["rock"]:
+                                    self._draw_rock(overlay, x, y, SIZE, 0,0)
+                                if self._world[x][y]["foods"]>0:
+                                    self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
+                                if self._world[x][y]["ant"]:
+                                    self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
+
+
 
             window.fill((255,255,255))
 
@@ -152,31 +154,34 @@ class Renderer(threading.Thread):
             y*=3
         color = (0,255,0)
         for m in markers:
+            if m[1] == "red":
+                color = (255,100,100)
+            elif m[1] == "black":
+                color = (100,100,100)
             if m[0] == 0:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x+2)*size+sx, y*size+sy),
                          ((x+4)*size+sx, (y+1)*size+sy))
-            if m[0] == 1:
+            elif m[0] == 1:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x+4)*size+sx, (y+3)*size+sy),
                          ((x+4)*size+sx, (y+1)*size+sy))
-            if m[0] == 2:
+            elif m[0] == 2:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x+4)*size+sx, (y+3)*size+sy),
                          ((x+2)*size+sx, (y+4)*size+sy))
-            if m[0] == 3:
+            elif m[0] == 3:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x)*size+sx, (y+3)*size+sy),
                          ((x+2)*size+sx, (y+4)*size+sy))
-            if m[0] == 4:
+            elif m[0] == 4:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x)*size+sx, (y+3)*size+sy),
                          ((x)*size+sx, (y+1)*size+sy))
-            if m[0] == 5:
+            elif m[0] == 5:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x+2)*size+sx, y*size+sy),
                          ((x)*size+sx, (y+1)*size+sy))
-
 
             pygame.draw.polygon(window, color, lines, 0)
 

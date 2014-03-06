@@ -23,12 +23,12 @@ class Runner(Thread):
 				if message[0] == "stop":
 					self._running = False
 				if message[0] == "speed":
-					for x in self._messages_from_gui:
-						if x[0] == "speed":
-							self._messages_from_gui.remove(x)
-							message = x
 					print message
 					self._speed = int(message[1])
+				for x in self._messages_from_gui:
+					if x[0] == message[0]:
+						self._messages_from_gui.remove(x)
+						message = x
 			time.sleep(.001)
 			if self._running:
 				self._timeout -= 1
