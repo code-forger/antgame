@@ -158,6 +158,7 @@ class Renderer(threading.Thread):
                 color = (255,100,100)
             elif m[1] == "black":
                 color = (100,100,100)
+                
             if m[0] == 0:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
                          ((x+2)*size+sx, y*size+sy),
