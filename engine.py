@@ -2,6 +2,8 @@ import brain
 from threading import Thread
 import time
 
+import world_gen
+
 BLACK = "-"
 ROCK = "#"
 FOOD = (1, 9)
@@ -55,7 +57,13 @@ class Engine(Thread):
 					self._gui.change_game_stats(self._game_stats)
 
 				elif (message[0]) == "generate world":
-					pass #TODO
+					world = world_gen.gen_world(150, 150)
+					world_gen.save_world(world, "generated.world")
+					self._world = self._parse_world("generated.world")
+					self._messages_to_renderer.append(["draw_world", self._world])
+					self._game_stats["red_alive"] = len(self._red_ants)
+					self._game_stats["black_alive"] = len(self._black_ants)
+					self._gui.change_game_stats(self._game_stats)
 				elif (message[0]) == "step world":
 					
 					if self._current_step == -1:
