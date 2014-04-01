@@ -22,6 +22,7 @@ class Renderer(threading.Thread):
         self._world = None
 
     def run(self):
+        self._dragging = False
         cl = pygame.time.Clock()
         sx = 0
         sy = 0
@@ -39,14 +40,71 @@ class Renderer(threading.Thread):
                 if event.type == QUIT:
                     running = not running
                 if event.type == MOUSEBUTTONDOWN:
-                    if event.button == 4:
-                        sy += 5
+                    if event.button == 1:
+                        self._dragging = True
+                        self._mouse = event.pos
+                    elif event.button == 4:
+                        global SIZE
+                        SIZE += 1
+                        if SIZE > 10:
+                            SIZE = 10
+                        overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                        background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                        background.fill((255,255,255,0))
+                        for x in range(150):
+                            for y in range(150):
+                                self._draw_hexagon(background, x, y, SIZE, 0,0)
+                        
+
+                        overlay.fill((255,255,255,0))
+
+
+                        for x in range(150):
+                            for y in range(150):
+                                if self._world:
+                                    if len(self._world[x][y]["markers"]):
+                                        self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
+                                    if self._world[x][y]["rock"]:
+                                        self._draw_rock(overlay, x, y, SIZE, 0,0)
+                                    if self._world[x][y]["foods"]>0:
+                                        self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
+                                    if self._world[x][y]["ant"]:
+                                        self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
                     elif event.button == 5:
-                        sy -= 5
-                    elif event.button == 6:
-                        sx += 5
-                    elif event.button == 7:
-                        sx -= 5
+                        global SIZE
+                        SIZE -= 1
+                        if SIZE < 0:
+                            SIZE = 0
+                        overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                        background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                        background.fill((255,255,255,0))
+                        for x in range(150):
+                            for y in range(150):
+                                self._draw_hexagon(background, x, y, SIZE, 0,0)
+                        
+
+                        overlay.fill((255,255,255,0))
+
+
+                        for x in range(150):
+                            for y in range(150):
+                                if self._world:
+                                    if len(self._world[x][y]["markers"]):
+                                        self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
+                                    if self._world[x][y]["rock"]:
+                                        self._draw_rock(overlay, x, y, SIZE, 0,0)
+                                    if self._world[x][y]["foods"]>0:
+                                        self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
+                                    if self._world[x][y]["ant"]:
+                                        self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
+                elif event.type == MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self._dragging = False
+                elif event.type == MOUSEMOTION:
+                    if self._dragging:
+                            sx -= self._mouse[0] - event.pos[0]
+                            sy -= self._mouse[1] - event.pos[1]
+                            self._mouse = event.pos
                 if event.type == VIDEORESIZE:
                     global window
                     window = sgc.surface.Screen(event.size,flags=pygame.DOUBLEBUF|pygame.RESIZABLE)
@@ -155,9 +213,9 @@ class Renderer(threading.Thread):
         color = (0,255,0)
         for m in markers:
             if m[1] == "red":
-                color = (255,100,100)
+                color = (255,200,200)
             elif m[1] == "black":
-                color = (100,100,100)
+                color = (200,200,200)
                 
             if m[0] == 0:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
