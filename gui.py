@@ -115,6 +115,7 @@ class Gui:
 		messages_to_engine.append(["load brain", "cleverbrain1.brain", "red"])
 		messages_to_engine.append(["load brain", "cleverbrain1.brain", "black"])
 
+
 		window_main.show()
 
 		window_main.set_keep_above(True)
@@ -127,15 +128,22 @@ class Gui:
 		exec("gtk.idle_add(self.label_details_of_" + brain + "_brain.set_text, message)")
 
 	def change_game_stats(self, stats):
-		if stats["current_step_of_game"] == 30000:
-			gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
-			self._messages_to_runner.append(["stop"])
+		if isinstance(stats, int):
+			if stats == 30000:
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats) + "! Game Over!")
+				self._messages_to_runner.append(["stop"])
+			else:
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats))
 		else:
-			gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
-		for name in self._stats.keys():
-			if name == "current_step_of_game":
-				continue
-			gtk.idle_add(self._stats[name].set_text, str(stats[name]))
+			if stats["current_step_of_game"] == 30000:
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
+				self._messages_to_runner.append(["stop"])
+			else:
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
+			for name in self._stats.keys():
+				if name == "current_step_of_game":
+					continue
+				gtk.idle_add(self._stats[name].set_text, str(stats[name]))
 
 
 if __name__ == "__main__":

@@ -37,8 +37,6 @@ class Renderer(threading.Thread):
 
             for event in pygame.event.get():
                 sgc.event(event)
-                if event.type == QUIT:
-                    running = not running
                 if event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self._dragging = True
@@ -116,7 +114,8 @@ class Renderer(threading.Thread):
                     window.blit(background, (sx,sy))
 
             if len(self._messages_from_engine) > 0:
-                message = self._messages_from_engine.pop(0)
+                message = self._messages_from_engine.pop(-1)
+                self._messages_from_engine[:] = []
                 if message[0] == "draw_world":
                     self._world = message[1]    
 
