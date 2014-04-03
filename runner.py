@@ -19,11 +19,12 @@ class Runner(Thread):
 			if len(self._messages_from_gui):
 				message = self._messages_from_gui.pop(0)
 				if message[0] == "run":
+					print "RUN"
 					self._running = True
 				if message[0] == "stop":
 					self._running = False
 				if message[0] == "speed":
-					print message
+					#print message
 					self._speed = int(message[1])
 				for x in self._messages_from_gui:
 					if x[0] == message[0]:

@@ -20,6 +20,8 @@ class Renderer(threading.Thread):
         self.daemon = True
 
         self._world = None
+        self._selected = "-1"
+        self._profile = [0 for x in range(100)]
 
     def run(self):
         self._dragging = False
@@ -116,8 +118,11 @@ class Renderer(threading.Thread):
             if len(self._messages_from_engine) > 0:
                 message = self._messages_from_engine.pop(-1)
                 self._messages_from_engine[:] = []
-                if message[0] == "draw_world":
-                    self._world = message[1]    
+
+                if message[0] == "draw_world" and str(message[2]) == str(self._selected):
+                    print "DRAWING"
+                    self._world = message[1]   
+
 
                     overlay.fill((255,255,255,0))
 
@@ -133,6 +138,10 @@ class Renderer(threading.Thread):
                                     self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
                                 if self._world[x][y]["ant"]:
                                     self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
+                if message[0] == "select_world":
+                    print message[1], self._selected
+                    self._selected = message[1]
+
 
 
 

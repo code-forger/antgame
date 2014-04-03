@@ -24,7 +24,7 @@ class Engine(Thread):
 		self._black_ants = None
 		self._red_ants = None
 		self._world = None
-		self._current_step = -1
+		self._current_step = "-1"
 		brain.Brain.attach_gui(gui)
 
 		self._game_stats = {"current_step_of_game":0,
@@ -36,6 +36,7 @@ class Engine(Thread):
 						   "black_carrying":0,
 						   "red_stored":0,
 						   "black_stored":0}
+		self.id = str(id)
 
 	def run(self):
 		while True:
@@ -46,14 +47,16 @@ class Engine(Thread):
 					self._current_step = -1
 					ant_brain = brain.Brain.parse_brain(message[1], message[2])
 					if (message[2]) == "red":
+						#print "engine ", self.id, " has received its red brain"
 						self._red_brain = ant_brain
 					elif  (message[2]) == "black":
+						#print "engine ", self.id, " has received its black brain"
 						self._black_brain = ant_brain
 
 				elif (message[0]) == "load world":
 					self._current_step = -1
 					self._world = self._parse_world(message[1])
-					self._messages_to_renderer.append(["draw_world", self._world])
+					self._messages_to_renderer.append(["draw_world", self._world, self.id])
 					self._game_stats["red_alive"] = len(self._red_ants)
 					self._game_stats["black_alive"] = len(self._black_ants)
 					self._gui.change_game_stats(self._game_stats)
@@ -63,7 +66,7 @@ class Engine(Thread):
 					world = world_gen.gen_world(150, 150)
 					world_gen.save_world(world, "generated.world")
 					self._world = self._parse_world("generated.world")
-					self._messages_to_renderer.append(["draw_world", self._world])
+					self._messages_to_renderer.append(["draw_world", self._world, self.id])
 					self._game_stats["red_alive"] = len(self._red_ants)
 					self._game_stats["black_alive"] = len(self._black_ants)
 					self._gui.change_game_stats(self._game_stats)
@@ -92,14 +95,15 @@ class Engine(Thread):
 						if old_stats == self._game_stats:
 							self._current_step += 1
 							self._game_stats["current_step_of_game"] = self._current_step
-							self._messages_to_renderer.append(["draw_world", self._world])
+							self._messages_to_renderer.append(["draw_world", self._world, self.id])
 							self._gui.change_game_stats(self._current_step)	
 						else:
 							self._current_step += 1
 							self._game_stats["current_step_of_game"] = self._current_step
-							self._messages_to_renderer.append(["draw_world", self._world])
+							self._messages_to_renderer.append(["draw_world", self._world, self.id])
 							self._gui.change_game_stats(self._game_stats)	
 
+					print "DONE WORLD ", self.id
 
 			time.sleep(.001)
 

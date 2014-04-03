@@ -55,6 +55,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="use_action_appearance">False</property>
                               </widget>
                               <packing>
                                 <property name="expand">True</property>
@@ -207,7 +208,7 @@ States: 1305</property>
                               <widget class="GtkLabel" id="label_details_of_black_brain">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="xalign">1.1175870895385742e-008</property>
+                                <property name="xalign">1.1175870895385742e-08</property>
                                 <property name="label" translatable="yes">File: BLACK.brain
 States: 1305</property>
                               </widget>
@@ -270,6 +271,7 @@ States: 1305</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="border_width">5</property>
+                            <property name="use_action_appearance">False</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -288,6 +290,7 @@ States: 1305</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="border_width">5</property>
+                                <property name="use_action_appearance">False</property>
                               </widget>
                               <packing>
                                 <property name="expand">True</property>
@@ -302,6 +305,7 @@ States: 1305</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
                                 <property name="border_width">5</property>
+                                <property name="use_action_appearance">False</property>
                               </widget>
                               <packing>
                                 <property name="expand">True</property>
@@ -330,7 +334,7 @@ States: 1305</property>
                                   <widget class="GtkHScale" id="slider_steps_per_sec">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="adjustment">1 1 100 1 10 10</property>
+                                    <property name="adjustment">1 1 200 5 10 10</property>
                                     <property name="lower_stepper_sensitivity">on</property>
                                     <property name="upper_stepper_sensitivity">on</property>
                                     <property name="round_digits">1</property>

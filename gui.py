@@ -2,6 +2,7 @@ import renderer
 import runner
 import engine
 import brain
+import tournament
 import gui
 import pygtk
 pygtk.require('2.0')
@@ -41,6 +42,128 @@ class Gui:
 			messages_to_engine.append(["step world"])
 
 
+		self._num_of_worlds_remaining = 0
+		self._num_of_players_remaining = 0
+
+
+		def tournament_message_to_generate_world(widget, data=None):
+			widget.set_sensitive(False)
+			self._num_of_worlds_remaining -= 1
+			world_num = int(widget.get_name().split("_")[-1])
+			pairings = (self._num_of_players * (self._num_of_players-1)/2)
+
+			offsett = world_num*pairings
+			tournament_messages_to_engine.append(["generate world", str(offsett)])
+			for x in range(pairings):
+				tournament_messages_to_engine.append(["load world", "generated.world",str(offsett + x)])
+
+			tournament_setup_complete()
+
+		def tournament_message_to_load_world(widget, data=None):
+			widget.set_sensitive(False)
+			
+			self._num_of_worlds_remaining -= 1
+			world_num = int(widget.get_name().split("_")[-1])
+			pairings = (self._num_of_players * (self._num_of_players-1)/2)
+
+			offsett = world_num*pairings
+			for x in range(pairings):
+				tournament_messages_to_engine.append(["load world", widget.get_filename(), str(offsett + x)])
+			tournament_setup_complete()
+
+		def tournament_message_to_load_brain(widget, data=None):
+			widget.set_sensitive(False)
+			self._num_of_players_remaining -= 1
+			player_num = int(widget.get_name().split("_")[-1]) + 1
+			print "player_num ", player_num
+			num_of_red_games = self._num_of_players - player_num
+			offset = 0
+			for oponents in range(player_num-1):
+				offset += self._num_of_players - (oponents + 1)
+			for game in range(num_of_red_games):
+				print "pushing red brain to game ", game + offset
+				tournament_messages_to_engine.append(["load brain", widget.get_filename(), "red", str(game + offset)])
+
+			num_of_black_games = (self._num_of_players - 1) - num_of_red_games
+			offset = 0
+			for g in range(num_of_black_games):
+				internal_offset = player_num - (2 + g)
+				print "pushing black brain to game ", internal_offset, offset, internal_offset + offset
+				tournament_messages_to_engine.append(["load brain", widget.get_filename(), "black", str(internal_offset + offset)])
+				offset += (self._num_of_players - 1) - g
+			tournament_setup_complete()
+
+
+		def tournament_message_to_start_runner(widget, data=None):
+			tournament_messages_to_runner.append(["run"])
+
+		def tournament_message_to_stop_runner(widget, data=None):
+			tournament_messages_to_runner.append(["stop"])
+
+		def tournament_message_to_speed_runner(range, scroll, value, data=None):
+			tournament_messages_to_runner.append(["speed", int(value)])
+
+		def tournament_message_to_step_engine(widget, data=None):
+			tournament_messages_to_engine.append(["step world"])
+
+		tournament_messages_to_runner = []
+		tournament_messages_to_engine = []
+		self._num_of_players = 0
+		self._num_of_worlds = 0
+
+		def tournament_setup_complete():
+			if self._num_of_worlds_remaining == 0 and self._num_of_players_remaining == 0:
+				get_tab_tournament_widget("button_start_game").set_sensitive(True)
+				get_tab_tournament_widget("button_step_game").set_sensitive(True)
+				get_tab_tournament_widget("button_pause_game").set_sensitive(True)
+				get_tab_tournament_widget("slider_steps_per_sec").set_sensitive(True)
+				get_tab_tournament_widget("spinner_select_tournament").set_sensitive(True)
+
+
+		def tournament_begin_setup(widget, data=None):
+			get_tab_tournament_widget("button_begin_setup").set_sensitive(False)
+			self._num_of_players = get_tab_tournament_widget("spinner_select_players").get_value_as_int()
+			self._num_of_worlds = get_tab_tournament_widget("spinner_select_worlds").get_value_as_int()
+
+			self._num_of_worlds_remaining = self._num_of_worlds
+			self._num_of_players_remaining = self._num_of_players
+			
+			tournament_game = tournament.Tournament(tournament_messages_to_engine, messages_between_engine_and_renderer, self, ((self._num_of_players-1)*(self._num_of_players)/2))
+			tournament_game.start()
+			tournament_runner = runner.Runner(tournament_messages_to_runner, tournament_messages_to_engine)
+			tournament_runner.start()
+
+			print len(tournament_messages_to_engine), self._num_of_worlds
+
+			for w in range(self._num_of_worlds):
+				layout_tree = gtk.glade.XML("world1.glade")
+				get = layout_tree.get_widget
+				t = get("top")
+				get_tab_tournament_widget("worlds_box").pack_start(t)
+				get("file_chooser_load_world").set_name("file_chooser_load_world_" + str(w))
+				get("file_chooser_load_world").connect("file-set", tournament_message_to_load_world)
+
+				get("button_generate_world").set_name("button_generate_world_" + str(w))
+				get("button_generate_world").connect("clicked", tournament_message_to_generate_world)
+
+			for w in range(self._num_of_players):
+				layout_tree = gtk.glade.XML("players.glade")
+				get = layout_tree.get_widget
+				t = get("top")
+				get_tab_tournament_widget("players_box").pack_start(t)
+
+				x = get("file_chooser_player_brain")
+				x.set_name("file_chooser_player_brain_" + str(w))
+				x.connect("file-set", tournament_message_to_load_brain)
+
+		def tournament_game_selected(widget, data=None):
+			print "#" * 100
+			messages_between_engine_and_renderer.append(("select_world" , str(widget.get_value_as_int())))
+			tournament_messages_to_engine.append(("select_world" , str(widget.get_value_as_int())))
+
+
+
+
 		window_main_layout = "window.glade"
 		window_main_layout_tree = gtk.glade.XML(window_main_layout)
 		get_widget = window_main_layout_tree.get_widget
@@ -77,21 +200,29 @@ class Gui:
 
 
 
+
 		get_tab_1v1_widget("button_generate_world").connect("clicked", message_to_generate_world)
-
 		get_tab_1v1_widget("file_chooser_load_world").connect("file-set", message_to_load_world)
-
 		get_tab_1v1_widget("file_chooser_red_brain").connect("file-set", message_to_load_red_brain)
-
 		get_tab_1v1_widget("file_chooser_black_brain").connect("file-set", message_to_load_black_brain)
-
 		get_tab_1v1_widget("button_start_game").connect("clicked", message_to_start_runner)
-
 		get_tab_1v1_widget("button_step_game").connect("clicked", message_to_step_engine)		
-
 		get_tab_1v1_widget("button_pause_game").connect("clicked", message_to_stop_runner)
-
 		get_tab_1v1_widget("slider_steps_per_sec").connect("change-value", message_to_speed_runner)
+
+		get_tab_tournament_widget("button_start_game").connect("clicked", tournament_message_to_start_runner)
+		get_tab_tournament_widget("button_step_game").connect("clicked", tournament_message_to_step_engine)		
+		get_tab_tournament_widget("button_pause_game").connect("clicked", tournament_message_to_stop_runner)
+		get_tab_tournament_widget("slider_steps_per_sec").connect("change-value", tournament_message_to_speed_runner)
+		get_tab_tournament_widget("button_begin_setup").connect("clicked", tournament_begin_setup)
+		get_tab_tournament_widget("spinner_select_tournament").connect("value-changed", tournament_game_selected)
+
+		get_tab_tournament_widget("button_start_game").set_sensitive(False)
+		get_tab_tournament_widget("button_step_game").set_sensitive(False)
+		get_tab_tournament_widget("button_pause_game").set_sensitive(False)
+		get_tab_tournament_widget("slider_steps_per_sec").set_sensitive(False)
+		get_tab_tournament_widget("spinner_select_tournament").set_sensitive(False)
+
 
 
 		self.label_details_of_world = get_tab_1v1_widget("label_details_of_world")
@@ -102,7 +233,7 @@ class Gui:
 		messages_to_engine = []
 		self._messages_to_runner = messages_to_runner = []
 		messages_between_engine_and_renderer = []
-		game_engine = engine.Engine(0,messages_to_engine, messages_between_engine_and_renderer, self)
+		game_engine = engine.Engine(-1,messages_to_engine, messages_between_engine_and_renderer, self)
 		game_engine.start()
 
 		world_renderer = renderer.Renderer(messages_between_engine_and_renderer)
