@@ -10,6 +10,8 @@ import gtk
 import gtk.glade
 import glib
 
+import math
+
 class Gui:
 	def __init__(self):
 		gtk.threads_init()

@@ -1,5 +1,6 @@
 import threading
 import time
+import json
 
 import pygame
 from pygame.locals import *
@@ -22,6 +23,9 @@ class Renderer(threading.Thread):
         self._world = None
         self._selected = "-1"
         self._profile = [0 for x in range(100)]
+
+        with open("titan.theme", "r") as f:
+            self._colours = json.loads(f.read())
 
     def run(self):
         self._dragging = False
@@ -112,7 +116,7 @@ class Renderer(threading.Thread):
                     global window
                     window = sgc.surface.Screen(event.size,flags=pygame.DOUBLEBUF|pygame.RESIZABLE)
 
-                    window.fill((255,255,255))
+                    window.fill(self._colours["background"])
 
                     window.blit(overlay, (sx,sy))
 
@@ -148,7 +152,7 @@ class Renderer(threading.Thread):
 
 
 
-            window.fill((255,255,255))
+            window.fill(self._colours["background"])
 
             window.blit(overlay, (sx,sy))
 
@@ -166,12 +170,12 @@ class Renderer(threading.Thread):
         else:
             x = x*4+2
             y*=3
-        pygame.draw.line(window, (200,200,200), (x*size+sx,(y+1)*size+sy), ((x+2)*size+sx, y*size+sy))
-        pygame.draw.line(window, (200,200,200), ((x+2)*size+sx, y*size+sy), ((x+4)*size+sx, (y+1)*size+sy))
-        pygame.draw.line(window, (200,200,200), ((x+4)*size+sx, (y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
-        pygame.draw.line(window, (200,200,200), ((x+4)*size+sx, (y+3)*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
-        pygame.draw.line(window, (200,200,200), ((x+2)*size+sx, (y+4)*size+sy), ((x)*size+sx, (y+3)*size+sy))
-        pygame.draw.line(window, (200,200,200), ((x)*size+sx, (y+3)*size+sy), (x*size+sx,(y+1)*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], (x*size+sx,(y+1)*size+sy), ((x+2)*size+sx, y*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], ((x+2)*size+sx, y*size+sy), ((x+4)*size+sx, (y+1)*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], ((x+4)*size+sx, (y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], ((x+4)*size+sx, (y+3)*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], ((x+2)*size+sx, (y+4)*size+sy), ((x)*size+sx, (y+3)*size+sy))
+        pygame.draw.line(window, self._colours["cell_border"], ((x)*size+sx, (y+3)*size+sy), (x*size+sx,(y+1)*size+sy))
 
     def _draw_rock(self, window, x, y, size, sx, sy):
         if y % 2 == 0:
@@ -180,9 +184,9 @@ class Renderer(threading.Thread):
         else:
             x = x*4+2
             y*=3
-        pygame.draw.line(window, (0,0,0), (x*size+sx,(y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
-        pygame.draw.line(window, (0,0,0), ((x+2)*size+sx, y*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
-        pygame.draw.line(window, (0,0,0), ((x+4)*size+sx, (y+1)*size+sy), ((x)*size+sx, (y+3)*size+sy))
+        pygame.draw.line(window, self._colours["rocks"], (x*size+sx,(y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
+        pygame.draw.line(window, self._colours["rocks"], ((x+2)*size+sx, y*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
+        pygame.draw.line(window, self._colours["rocks"], ((x+4)*size+sx, (y+1)*size+sy), ((x)*size+sx, (y+3)*size+sy))
 
     def _draw_ant(self, window, ant, x, y, size, sx, sy):
         if y % 2 == 0:
@@ -192,9 +196,9 @@ class Renderer(threading.Thread):
             x = x*4+2
             y*=3
         if ant.color == "red":
-            color = (255,0,0)
+            color = self._colours["red_ant"]
         elif ant.color == "black":
-            color = (0, 0, 0)
+            color = self._colours["black_ant"]
 
         ant_surf = pygame.surface.Surface((4*SIZE,4*SIZE), flags=pygame.SRCALPHA)
 
@@ -224,9 +228,9 @@ class Renderer(threading.Thread):
         color = (0,255,0)
         for m in markers:
             if m[1] == "red":
-                color = (255,200,200)
+                color = self._colours["red_marker"]
             elif m[1] == "black":
-                color = (200,200,200)
+                color = self._colours["black_marker"]
                 
             if m[0] == 0:
                 lines = (((x+2)*size+sx,(y+2)*size+sy),
@@ -263,7 +267,7 @@ class Renderer(threading.Thread):
         else:
             x = x*4+2
             y*=3
-        color = (0,0,255)
+        color = self._colours["food"]
 
         lines = []
         for i in range(foods):
