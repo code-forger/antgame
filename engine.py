@@ -103,8 +103,6 @@ class Engine(Thread):
 							self._messages_to_renderer.append(["draw_world", self._world, self.id])
 							self._gui.change_game_stats(self._game_stats)	
 
-					print "DONE WORLD ", self.id
-
 			time.sleep(.001)
 
 

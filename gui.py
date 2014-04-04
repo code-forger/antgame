@@ -50,6 +50,7 @@ class Gui:
 			widget.set_sensitive(False)
 			self._num_of_worlds_remaining -= 1
 			world_num = int(widget.get_name().split("_")[-1])
+			self._load_world_buttons[world_num].set_sensitive(False)
 			pairings = (self._num_of_players * (self._num_of_players-1)/2)
 
 			offsett = world_num*pairings
@@ -64,6 +65,7 @@ class Gui:
 			
 			self._num_of_worlds_remaining -= 1
 			world_num = int(widget.get_name().split("_")[-1])
+			self._generate_world_buttons[world_num].set_sensitive(False)
 			pairings = (self._num_of_players * (self._num_of_players-1)/2)
 
 			offsett = world_num*pairings
@@ -110,6 +112,9 @@ class Gui:
 		tournament_messages_to_engine = []
 		self._num_of_players = 0
 		self._num_of_worlds = 0
+		self._generate_world_buttons = []
+		self._load_world_buttons = []
+		self._load_brain_buttons = []
 
 		def tournament_setup_complete():
 			if self._num_of_worlds_remaining == 0 and self._num_of_players_remaining == 0:
@@ -118,6 +123,13 @@ class Gui:
 				get_tab_tournament_widget("button_pause_game").set_sensitive(True)
 				get_tab_tournament_widget("slider_steps_per_sec").set_sensitive(True)
 				get_tab_tournament_widget("spinner_select_tournament").set_sensitive(True)
+			if self._num_of_players_remaining == 0 and self._num_of_worlds_remaining == self._num_of_worlds:
+				for x in self._load_world_buttons:
+					print x
+					x.set_sensitive(True)
+				for x in self._generate_world_buttons:
+					print x
+					x.set_sensitive(True)
 
 
 		def tournament_begin_setup(widget, data=None):
@@ -142,9 +154,13 @@ class Gui:
 				get_tab_tournament_widget("worlds_box").pack_start(t)
 				get("file_chooser_load_world").set_name("file_chooser_load_world_" + str(w))
 				get("file_chooser_load_world").connect("file-set", tournament_message_to_load_world)
+				get("file_chooser_load_world").set_sensitive(False)
+				self._load_world_buttons.append(get("file_chooser_load_world"))
 
 				get("button_generate_world").set_name("button_generate_world_" + str(w))
 				get("button_generate_world").connect("clicked", tournament_message_to_generate_world)
+				get("button_generate_world").set_sensitive(False)
+				self._generate_world_buttons.append(get("button_generate_world"))
 
 			for w in range(self._num_of_players):
 				layout_tree = gtk.glade.XML("players.glade")
@@ -156,8 +172,13 @@ class Gui:
 				x.set_name("file_chooser_player_brain_" + str(w))
 				x.connect("file-set", tournament_message_to_load_brain)
 
+				get("player_label").set_text("Player " + str(w+1))
+				self._load_brain_buttons.append(x)
+
 		def tournament_game_selected(widget, data=None):
 			print "#" * 100
+			if int(widget.get_value_as_int()) > ((self._num_of_players-1)*(self._num_of_players)/2) - 1:
+				widget.set_value(((self._num_of_players-1)*(self._num_of_players)/2)-1)
 			messages_between_engine_and_renderer.append(("select_world" , str(widget.get_value_as_int())))
 			tournament_messages_to_engine.append(("select_world" , str(widget.get_value_as_int())))
 

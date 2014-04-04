@@ -45,58 +45,61 @@ class Renderer(threading.Thread):
                         self._mouse = event.pos
                     elif event.button == 4:
                         global SIZE
+                        oldsize = SIZE
                         SIZE += 1
                         if SIZE > 10:
                             SIZE = 10
-                        overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                        background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                        background.fill((255,255,255,0))
-                        for x in range(150):
-                            for y in range(150):
-                                self._draw_hexagon(background, x, y, SIZE, 0,0)
-                        
+                        if oldsize != SIZE:
+                            overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            background.fill((255,255,255,0))
+                            for x in range(150):
+                                for y in range(150):
+                                    self._draw_hexagon(background, x, y, SIZE, 0,0)
 
-                        overlay.fill((255,255,255,0))
+                            overlay.fill((255,255,255,0))
 
+                            for x in range(150):
+                                for y in range(150):
+                                    if self._world:
+                                        if len(self._world[x][y]["markers"]):
+                                            self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
+                                        if self._world[x][y]["rock"]:
+                                            self._draw_rock(overlay, x, y, SIZE, 0,0)
+                                        if self._world[x][y]["foods"]>0:
+                                            self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
+                                        if self._world[x][y]["ant"]:
+                                            self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
 
-                        for x in range(150):
-                            for y in range(150):
-                                if self._world:
-                                    if len(self._world[x][y]["markers"]):
-                                        self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
-                                    if self._world[x][y]["rock"]:
-                                        self._draw_rock(overlay, x, y, SIZE, 0,0)
-                                    if self._world[x][y]["foods"]>0:
-                                        self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
-                                    if self._world[x][y]["ant"]:
-                                        self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
                     elif event.button == 5:
                         global SIZE
+                        oldsize = SIZE
                         SIZE -= 1
-                        if SIZE < 0:
-                            SIZE = 0
-                        overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                        background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                        background.fill((255,255,255,0))
-                        for x in range(150):
-                            for y in range(150):
-                                self._draw_hexagon(background, x, y, SIZE, 0,0)
-                        
+                        if SIZE < 1:
+                            SIZE = 1
+                        if oldsize != SIZE:
 
-                        overlay.fill((255,255,255,0))
+                            overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            background.fill((255,255,255,0))
+                            for x in range(150):
+                                for y in range(150):
+                                    self._draw_hexagon(background, x, y, SIZE, 0,0)
+                            
+                            overlay.fill((255,255,255,0))
 
+                            for x in range(150):
+                                for y in range(150):
+                                    if self._world:
+                                        if len(self._world[x][y]["markers"]):
+                                            self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
+                                        if self._world[x][y]["rock"]:
+                                            self._draw_rock(overlay, x, y, SIZE, 0,0)
+                                        if self._world[x][y]["foods"]>0:
+                                            self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
+                                        if self._world[x][y]["ant"]:
+                                            self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
 
-                        for x in range(150):
-                            for y in range(150):
-                                if self._world:
-                                    if len(self._world[x][y]["markers"]):
-                                        self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
-                                    if self._world[x][y]["rock"]:
-                                        self._draw_rock(overlay, x, y, SIZE, 0,0)
-                                    if self._world[x][y]["foods"]>0:
-                                        self._draw_food(overlay, self._world[x][y]["foods"], x, y, SIZE, 0,0)
-                                    if self._world[x][y]["ant"]:
-                                        self._draw_ant(overlay, self._world[x][y]["ant"], x, y, SIZE, 0,0)
                 elif event.type == MOUSEBUTTONUP:
                     if event.button == 1:
                         self._dragging = False
@@ -119,7 +122,7 @@ class Renderer(threading.Thread):
                 message = self._messages_from_engine.pop(-1)
                 self._messages_from_engine[:] = []
 
-                if message[0] == "draw_world" and str(message[2]) == str(self._selected):
+                if message[0] == "draw_world":
                     print "DRAWING"
                     self._world = message[1]   
 
@@ -261,7 +264,32 @@ class Renderer(threading.Thread):
             x = x*4+2
             y*=3
         color = (0,0,255)
-        pygame.draw.line(window, color, (x*size+sx,(y+1)*size+sy), ((x+4)*size+sx, (y+3)*size+sy))
-        pygame.draw.line(window, color, ((x+2)*size+sx, y*size+sy), ((x+2)*size+sx, (y+4)*size+sy))
-        pygame.draw.line(window, color, ((x+4)*size+sx, (y+1)*size+sy), ((x)*size+sx, (y+3)*size+sy))
+
+        lines = []
+        for i in range(foods):
+            if i == 0:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x+2)*size+sx, y*size+sy),
+                                         ((x+4)*size+sx, (y+1)*size+sy)))
+            elif i == 1:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x+4)*size+sx, (y+3)*size+sy),
+                                         ((x+4)*size+sx, (y+1)*size+sy)))
+            elif i == 2:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x+4)*size+sx, (y+3)*size+sy),
+                                         ((x+2)*size+sx, (y+4)*size+sy)))
+            elif i == 3:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x)*size+sx, (y+3)*size+sy),
+                                         ((x+2)*size+sx, (y+4)*size+sy)))
+            elif i == 4:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x)*size+sx, (y+3)*size+sy),
+                                         ((x)*size+sx, (y+1)*size+sy)))
+            elif i == 5:
+                lines.extend((((x+2)*size+sx,(y+2)*size+sy),
+                                         ((x+2)*size+sx, y*size+sy),
+                                         ((x)*size+sx, (y+1)*size+sy)))
+        pygame.draw.polygon(window, color, lines, 0)
 
