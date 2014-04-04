@@ -79,21 +79,24 @@ class Gui:
 			player_num = int(widget.get_name().split("_")[-1]) + 1
 			print "player_num ", player_num
 			num_of_red_games = self._num_of_players - player_num
-			offset = 0
-			for oponents in range(player_num-1):
-				offset += self._num_of_players - (oponents + 1)
-			for game in range(num_of_red_games):
-				print "pushing red brain to game ", game + offset
-				tournament_messages_to_engine.append(["load brain", widget.get_filename(), "red", str(game + offset)])
+			pairings = (self._num_of_players * (self._num_of_players-1)/2)
+			print pairings
+			for x in range(self._num_of_worlds):
+				offset = (pairings * x)
+				for oponents in range(player_num-1):
+					offset += self._num_of_players - (oponents + 1)
+				for game in range(num_of_red_games):
+					print "pushing red brain to game ", game + offset
+					tournament_messages_to_engine.append(["load brain", widget.get_filename(), "red", str(game + offset)])
 
-			num_of_black_games = (self._num_of_players - 1) - num_of_red_games
-			offset = 0
-			for g in range(num_of_black_games):
-				internal_offset = player_num - (2 + g)
-				print "pushing black brain to game ", internal_offset, offset, internal_offset + offset
-				tournament_messages_to_engine.append(["load brain", widget.get_filename(), "black", str(internal_offset + offset)])
-				offset += (self._num_of_players - 1) - g
-			tournament_setup_complete()
+				num_of_black_games = (self._num_of_players - 1) - num_of_red_games
+				offset = (pairings * x)
+				for g in range(num_of_black_games):
+					internal_offset = player_num - (2 + g)
+					print "pushing black brain to game ", internal_offset, offset, internal_offset + offset
+					tournament_messages_to_engine.append(["load brain", widget.get_filename(), "black", str(internal_offset + offset)])
+					offset += (self._num_of_players - 1) - g
+				tournament_setup_complete()
 
 
 		def tournament_message_to_start_runner(widget, data=None):
@@ -140,7 +143,7 @@ class Gui:
 			self._num_of_worlds_remaining = self._num_of_worlds
 			self._num_of_players_remaining = self._num_of_players
 			
-			tournament_game = tournament.Tournament(tournament_messages_to_engine, messages_between_engine_and_renderer, self, ((self._num_of_players-1)*(self._num_of_players)/2))
+			tournament_game = tournament.Tournament(tournament_messages_to_engine, messages_between_engine_and_renderer, self, self._num_of_worlds*((self._num_of_players-1)*(self._num_of_players)/2))
 			tournament_game.start()
 			tournament_runner = runner.Runner(tournament_messages_to_runner, tournament_messages_to_engine)
 			tournament_runner.start()
@@ -177,8 +180,8 @@ class Gui:
 
 		def tournament_game_selected(widget, data=None):
 			print "#" * 100
-			if int(widget.get_value_as_int()) > ((self._num_of_players-1)*(self._num_of_players)/2) - 1:
-				widget.set_value(((self._num_of_players-1)*(self._num_of_players)/2)-1)
+			if int(widget.get_value_as_int()) > (self._num_of_worlds*((self._num_of_players-1)*(self._num_of_players)/2)) - 1:
+				widget.set_value((self._num_of_worlds*((self._num_of_players-1)*(self._num_of_players)/2)) - 1)
 			messages_between_engine_and_renderer.append(("select_world" , str(widget.get_value_as_int())))
 			tournament_messages_to_engine.append(("select_world" , str(widget.get_value_as_int())))
 
@@ -213,11 +216,24 @@ class Gui:
 					     "red_carrying",
 					     "black_carrying",
 					     "red_stored",
+					     "black_stored"]	
+		tournament_stat_controls = ["current_step_of_game",
+					     "red_alive",
+					     "black_alive",
+					     "red_dead_redemption",
+					     "black_dead",
+					     "red_carrying",
+					     "black_carrying",
+					     "red_stored",
 					     "black_stored"]
 
 		self._stats = {}
 		for name in stat_controls:
 			self._stats[name] = get_tab_1v1_widget("label_"+name)
+
+		self._tournament_stats = {}
+		for name in tournament_stat_controls:
+			self._tournament_stats[name] = get_tab_tournament_widget("label_"+name)
 
 
 
@@ -296,6 +312,23 @@ class Gui:
 				if name == "current_step_of_game":
 					continue
 				gtk.idle_add(self._stats[name].set_text, str(stats[name]))
+
+		if isinstance(stats, int):
+			if stats == 30000:
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats) + "! Game Over!")
+				self._messages_to_runner.append(["stop"])
+			else:
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats))
+		else:
+			if stats["current_step_of_game"] == 30000:
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
+				self._messages_to_runner.append(["stop"])
+			else:
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
+			for name in self._tournament_stats.keys():
+				if name == "current_step_of_game":
+					continue
+				gtk.idle_add(self._tournament_stats[name].set_text, str(stats[name]))
 
 
 if __name__ == "__main__":
