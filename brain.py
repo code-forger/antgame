@@ -1,5 +1,5 @@
 import random
-
+from memory_profiler import memory_usage
 '''
 sense sensedir st1 st2 cond     Go to state st1 if cond holds in sensedir;
         and to state st2 otherwise.
@@ -54,14 +54,15 @@ class Brain:
         Changes the state (excluding position) of brain, according to
         current instruction.
         """
+        #mem_usage = memory_usage(-1, interval=.01, timeout=.01)
+        #print mem_usage
         instruction = self._states[self._state]
 
-        move = []
+        move = ["none"]
 
         if self._rest_time > 0:
             self._rest_time -= 1
-            move = ["none"]
-
+            move = ["none"]      
         elif instruction[0] == "sense":
             pos = self._position
             dir = self._direction
@@ -75,6 +76,7 @@ class Brain:
                 self._state = instruction[3]
 
             move = ["none"]
+
         elif instruction[0] in ["mark", "unmark"]:
             move = instruction[:-1]
             self._state = instruction[2]
@@ -87,7 +89,6 @@ class Brain:
             else:
                 move = [instruction[0]]
                 self._state = instruction[1]
-
         elif instruction[0] == "drop":
             move = [instruction[0]] if self.has_food else ["none"]
             self._state = instruction[1]
@@ -109,7 +110,6 @@ class Brain:
             rand_state = instruction[2] if rand_n == 0 else instruction[3]
             self._state = rand_state
             move = ["none"]
-
         return move
 
     @classmethod
@@ -220,7 +220,7 @@ class Brain:
 # Convenient functions for ant brain simulation #
 #################################################
 
-
+  
 def adjacent_cell(pos, dir):
     """Returns the adjacent cell of position, depending on the direction."""
     x, y = pos
@@ -237,7 +237,7 @@ def adjacent_cell(pos, dir):
 
     return next_dir[dir]
 
-
+   
 def sensed_cell(pos, dir, sense_dir):
     """Returns the coordinates of the cell being sensed."""
     cell = {}
@@ -248,16 +248,15 @@ def sensed_cell(pos, dir, sense_dir):
 
     return cell[sense_dir]
 
-
+   
 def turn(lr, dir):
     """Returns the new turned direction."""
     next_dir = {}
     next_dir["left"] = (dir+5) % 6
     next_dir["right"] = (dir+1) % 6
-
     return next_dir[lr]
 
-
+ 
 def other_color(color):
     """Returns the opposite color of the ant."""
     opposite_color = {}
@@ -266,25 +265,24 @@ def other_color(color):
 
     return opposite_color[color]
 
-
+   
 def rocky(world, pos):
     """Returns True if pos is rocky."""
     x, y = pos
     return world[x][y]["rock"]
-
-
+   
 def check_marker_at(world, pos, color, marker):
     """Returns True if marker of color c is set in pos."""
     x, y = pos
     return any(m[0] == marker and m[1] == color for m in world[x][y]["markers"])
 
-
+   
 def any_marker_at(world, pos, color):
     """Returns True if ANY marker of color c is set in pos."""
     x, y = pos
     return any(m[1] == color for m in world[x][y]["markers"])
 
-
+ 
 def cell_matches(world, pos, cond, color):
     """
     Takes a position p, a condition cond, and a color c
@@ -292,7 +290,7 @@ def cell_matches(world, pos, cond, color):
     checks whether cond holds at p.
     """
     if rocky(world, pos):
-        return True if cond == "rock" else False
+        return True if cond[0] == "rock" else False
 
     x, y = pos
     ant = world[x][y]["ant"]
@@ -335,7 +333,7 @@ def make_rand_gen(seed):
     def randomint(n):
         if n > 0:
             x = (S[-1] / 65536) % n
-            S.append(S[-1] * 22695477 + 1)
+            S[-1] = S[-1] * 22695477 + 1
 
             return int(x % n)
 

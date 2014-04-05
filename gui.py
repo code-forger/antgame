@@ -9,6 +9,7 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 import glib
+from guppy import hpy
 
 import math
 

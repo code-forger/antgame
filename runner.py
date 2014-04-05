@@ -13,6 +13,7 @@ class Runner(Thread):
 		
 		self._timeout = False
 
+
 	def run(self):
 		print "Starting runner"
 		while True:

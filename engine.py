@@ -3,6 +3,7 @@ from threading import Thread
 import time
 
 import world_gen
+from guppy import hpy
 
 BLACK = "-"
 ROCK = "#"
@@ -37,6 +38,21 @@ class Engine(Thread):
 						   "red_stored":0,
 						   "black_stored":0}
 		self.id = str(id)
+
+	def do(self):
+		if self._current_step % 5000 == 0:
+			h = hpy()
+			print h.heap()
+		for ant in self._red_ants:
+			if ant.alive:
+				self._update_ant(ant)
+			else:
+				self._red_ants.remove(ant)
+		for ant in self._black_ants:
+			if ant.alive:
+				self._update_ant(ant)
+			else:
+				self._black_ants.remove(ant)
 
 	def run(self):
 		while True:
@@ -92,16 +108,7 @@ class Engine(Thread):
 						elif self._current_step == 30000:
 							self._gui.change_game_stats(self._game_stats)
 						else:
-							for ant in self._red_ants:
-								if ant.alive:
-									self._update_ant(ant)
-								else:
-									self._red_ants.remove(ant)
-							for ant in self._black_ants:
-								if ant.alive:
-									self._update_ant(ant)
-								else:
-									self._black_ants.remove(ant)
+							self.do()
 							if old_stats == self._game_stats:
 								self._current_step += 1
 								self._game_stats["current_step_of_game"] = self._current_step
@@ -192,9 +199,9 @@ class Engine(Thread):
 
 		return parsed
 
-
 	def _update_ant(self, ant):
 		"""Returns updated world after each intruction"""
+
 		response = ant.update_brain(self._world)
 		x, y = ant._position
 
@@ -202,7 +209,6 @@ class Engine(Thread):
 		# e.g. a marker would look like:
 		# (1, "red")
 		# (4, "black")
-
 		if response[0] == "mark":
 			# TODO: Please revise as it was just a quick fix
 			# Delete TODO comment if it seems fine
@@ -378,5 +384,5 @@ class Engine(Thread):
 		self._gui.change_world_details("File: " + path + "\n" + 
 									   "Size: 150 * 150\n" + 
 									   "Ants: " + str(len(self._red_ants) + len(self._black_ants)) + "\n"
-									   "Food: " + str(len(self._foods)))
+									   "Food: " + str(self._foods))
 		return final

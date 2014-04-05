@@ -125,9 +125,8 @@ class Renderer(threading.Thread):
             if len(self._messages_from_engine) > 0:
                 message = self._messages_from_engine.pop(-1)
                 self._messages_from_engine[:] = []
-
                 if message[0] == "draw_world":
-                    print "DRAWING"
+
                     self._world = message[1]   
 
 
