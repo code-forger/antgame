@@ -1,13 +1,7 @@
->> Tabs are not named properly
->> Foods under antworld panel should not be named foods... improper use of english
->>under game stats, step is not capitalised like so... Steps
->>Under the tournament tab, tornament gets shifted upwards and there is a large padding between tornament title and spinners below
->>begin setup button changes size, and anchors directly below the spinners
->>file chooser info does not change from file: redbrain and states: 1305
->>when selecting ant world in tornament you cannot change world or player after selection also does not state if correct file has been passed
+
+>>Foods under antworld panel should not be named foods... improper use of english # NOT A BUG A GOOD CHOICE
+
+
 >>if mix of vaild and invalid worlds are passed, valid worlds render and run, invailids do not. Need to stop all rendering and tell the user something is wrong
->>placeholder does not appear for tornament number of players
->>File "/home/matthew/Documents/Ant/trunk/renderer.py", line 198, in _draw_ant
-    if ant.color == "red":
-AttributeError: 'NoneType' object has no attribute 'color'
+
 >>

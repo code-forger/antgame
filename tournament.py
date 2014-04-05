@@ -151,7 +151,6 @@ class Tournament(Thread):
 			if col == ROCK:
 				parsed.append(self._make_cell(rock=True))
 			else:
-				self._gui.change_world_details("Expected only #")
 				return None
 
 		return parsed
@@ -163,7 +162,6 @@ class Tournament(Thread):
 		if row[0] == ROCK:
 			parsed.append(self._make_cell(rock=True))
 		else:
-			self._gui.change_world_details("Expected perimeter at beginning.")
 			return None
 
 
@@ -193,11 +191,9 @@ class Tournament(Thread):
 					elif FOOD[0] <= int(col) <= FOOD[1]:
 						cell["foods"] = int(col)
 					else:
-						self._gui.change_world_details(col_count + "Expected +|-|.|#|1-9")
 						return None
 
 				except ValueError as err:
-					self._gui.change_world_details(col_count + "Expected a number")
 					return None
 
 
@@ -208,7 +204,6 @@ class Tournament(Thread):
 		if row[-1] == ROCK:
 			parsed.append(self._make_cell(rock=True))
 		else:
-			self._gui.change_world_details("Expected perimeter at end.")
 			return None
 
 
@@ -359,8 +354,7 @@ class Tournament(Thread):
 		try:
 			num_of_cols = int(world[0])
 			num_of_rows = int(world[1])
-		except ValueError as err:
-			self._gui.change_world_details("Expected a number as dimension.")
+		except ValueError as err:pass
 
 
 
@@ -368,14 +362,12 @@ class Tournament(Thread):
 		rows = [r.split() for r in world[2:]]
 
 		# Check if number of rows are correct.
-		if len(rows) != num_of_rows:
-			self._gui.change_world_details("line (2) Wrong number of rows.")
+		if len(rows) != num_of_rows:pass
 
 		# Check if number of columns in each row are correct.
 		for i in xrange(0, len(rows)):
 			if len(rows[i]) != num_of_cols:
 				msg = "line (" + str(i + 3) + ") " + "Wrong number of columns."
-				self._gui.change_world_details(msg)
 
 		final = []
 
@@ -395,10 +387,4 @@ class Tournament(Thread):
 		if bottom_row == None:
 			return None
 		final.append(bottom_row)
-
-
-		self._gui.change_world_details("File: " + path + "\n" + 
-									   "Size: 150 * 150\n" + 
-									   "Ants: " + str(len(self._red_ants[game_number]) + len(self._black_ants[game_number])) + "\n"
-									   "Foods: XXX")
 		return final

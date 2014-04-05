@@ -48,6 +48,21 @@ class Gui:
 		self._num_of_players_remaining = 0
 
 
+
+		def tournament_cancel_world(widget, data=None):
+			world_num = int(widget.get_name().split("_")[-1])
+			self._load_world_buttons[world_num].set_sensitive(True)
+			self._generate_world_buttons[world_num].set_sensitive(True)
+			self._num_of_worlds_remaining += 1
+			tournament_setup_complete()
+
+		def tournament_cancel_player(widget, data=None):
+			world_num = int(widget.get_name().split("_")[-1])
+			self._load_brain_buttons[world_num].set_sensitive(True)
+			self._num_of_players_remaining += 1
+			tournament_setup_complete()
+
+
 		def tournament_message_to_generate_world(widget, data=None):
 			widget.set_sensitive(False)
 			self._num_of_worlds_remaining -= 1
@@ -128,6 +143,13 @@ class Gui:
 				get_tab_tournament_widget("button_pause_game").set_sensitive(True)
 				get_tab_tournament_widget("slider_steps_per_sec").set_sensitive(True)
 				get_tab_tournament_widget("spinner_select_tournament").set_sensitive(True)
+			else:
+				get_tab_tournament_widget("button_start_game").set_sensitive(False)
+				get_tab_tournament_widget("button_step_game").set_sensitive(False)
+				get_tab_tournament_widget("button_pause_game").set_sensitive(False)
+				get_tab_tournament_widget("slider_steps_per_sec").set_sensitive(False)
+				get_tab_tournament_widget("spinner_select_tournament").set_sensitive(False)
+
 			if self._num_of_players_remaining == 0 and self._num_of_worlds_remaining == self._num_of_worlds:
 				for x in self._load_world_buttons:
 					print x
@@ -167,6 +189,9 @@ class Gui:
 				get("button_generate_world").set_sensitive(False)
 				self._generate_world_buttons.append(get("button_generate_world"))
 
+				get("button_cancel").set_name("button_cancel_" + str(w))
+				get("button_cancel").connect("clicked", tournament_cancel_world)
+
 			for w in range(self._num_of_players):
 				layout_tree = gtk.glade.XML("players.glade")
 				get = layout_tree.get_widget
@@ -178,6 +203,8 @@ class Gui:
 				x.connect("file-set", tournament_message_to_load_brain)
 
 				get("player_label").set_text("Player " + str(w+1))
+				get("button_cancel").set_name("button_cancel_" + str(w))
+				get("button_cancel").connect("clicked", tournament_cancel_player)
 				self._load_brain_buttons.append(x)
 
 		def tournament_game_selected(widget, data=None):
@@ -207,8 +234,8 @@ class Gui:
 		
 		notepad = get_widget("tabs")
 		
-		notepad.append_page(get_tab_1v1_widget("top"), gtk.Label("tab_1v1"))
-		notepad.append_page(get_tab_tournament_widget("top"), gtk.Label("tab_tournament"))
+		notepad.append_page(get_tab_1v1_widget("top"), gtk.Label("Classic Mode"))
+		notepad.append_page(get_tab_tournament_widget("top"), gtk.Label("Tournament Mode"))
 	
 		stat_controls = ["current_step_of_game",
 					     "red_alive",
@@ -256,6 +283,10 @@ class Gui:
 		get_tab_tournament_widget("button_begin_setup").connect("clicked", tournament_begin_setup)
 		get_tab_tournament_widget("spinner_select_tournament").connect("value-changed", tournament_game_selected)
 
+		get_tab_tournament_widget("spinner_select_tournament").set_value(0)
+		get_tab_tournament_widget("spinner_select_players").set_value(2)
+		get_tab_tournament_widget("spinner_select_worlds").set_value(1)
+
 		get_tab_tournament_widget("button_start_game").set_sensitive(False)
 		get_tab_tournament_widget("button_step_game").set_sensitive(False)
 		get_tab_tournament_widget("button_pause_game").set_sensitive(False)
@@ -300,16 +331,16 @@ class Gui:
 	def change_game_stats(self, stats):
 		if isinstance(stats, int):
 			if stats == 30000:
-				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats) + "! Game Over!")
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "Step: " + str(stats) + "! Game Over!")
 				self._messages_to_runner.append(["stop"])
 			else:
-				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats))
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "Step: " + str(stats))
 		else:
 			if stats["current_step_of_game"] == 30000:
-				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "Step: " + str(stats["current_step_of_game"]) + "! Game Over!")
 				self._messages_to_runner.append(["stop"])
 			else:
-				gtk.idle_add(self._stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
+				gtk.idle_add(self._stats["current_step_of_game"].set_text, "Step: " + str(stats["current_step_of_game"]))
 			for name in self._stats.keys():
 				if name == "current_step_of_game":
 					continue
@@ -317,16 +348,16 @@ class Gui:
 
 		if isinstance(stats, int):
 			if stats == 30000:
-				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats) + "! Game Over!")
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "Step: " + str(stats) + "! Game Over!")
 				self._messages_to_runner.append(["stop"])
 			else:
-				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats))
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "Step: " + str(stats))
 		else:
 			if stats["current_step_of_game"] == 30000:
-				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]) + "! Game Over!")
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "Step: " + str(stats["current_step_of_game"]) + "! Game Over!")
 				self._messages_to_runner.append(["stop"])
 			else:
-				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "step: " + str(stats["current_step_of_game"]))
+				gtk.idle_add(self._tournament_stats["current_step_of_game"].set_text, "Step: " + str(stats["current_step_of_game"]))
 			for name in self._tournament_stats.keys():
 				if name == "current_step_of_game":
 					continue
