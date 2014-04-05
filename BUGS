@@ -3,5 +3,3 @@
 
 
 >>if mix of vaild and invalid worlds are passed, valid worlds render and run, invailids do not. Need to stop all rendering and tell the user something is wrong
-
->>

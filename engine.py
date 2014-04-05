@@ -169,6 +169,7 @@ class Engine(Thread):
 						pass
 					elif FOOD[0] <= int(col) <= FOOD[1]:
 						cell["foods"] = int(col)
+						self._foods += int(col)
 					else:
 						self._gui.change_world_details(col_count + "Expected +|-|.|#|1-9")
 						return None
@@ -323,6 +324,7 @@ class Engine(Thread):
 
 	def _parse_world(self, path):
 		"""Returns a complete tokenized world after parsing."""
+		self._foods = 0
 		self._num_of_ants = 0
 		self._black_ants = []
 		self._red_ants = []
@@ -376,5 +378,5 @@ class Engine(Thread):
 		self._gui.change_world_details("File: " + path + "\n" + 
 									   "Size: 150 * 150\n" + 
 									   "Ants: " + str(len(self._red_ants) + len(self._black_ants)) + "\n"
-									   "Foods: XXX")
+									   "Food: " + str(len(self._foods)))
 		return final
