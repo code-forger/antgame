@@ -188,33 +188,36 @@ class Renderer(threading.Thread):
         pygame.draw.line(window, self._colours["rocks"], ((x+4)*size+sx, (y+1)*size+sy), ((x)*size+sx, (y+3)*size+sy))
 
     def _draw_ant(self, window, ant, x, y, size, sx, sy):
-        if y % 2 == 0:
-            x*=4
-            y*=3
-        else:
-            x = x*4+2
-            y*=3
-        if ant.color == "red":
-            color = self._colours["red_ant"]
-        elif ant.color == "black":
-            color = self._colours["black_ant"]
+        try:
+            if y % 2 == 0:
+                x*=4
+                y*=3
+            else:
+                x = x*4+2
+                y*=3
+            if ant.color == "red":
+                color = self._colours["red_ant"]
+            elif ant.color == "black":
+                color = self._colours["black_ant"]
 
-        ant_surf = pygame.surface.Surface((4*SIZE,4*SIZE), flags=pygame.SRCALPHA)
-
-
-        lines = ((4*size,2*size),
-                 (0*size, 1*size),
-                 (0*size, 3*size))
-
-        width = 0 if ant._has_food else 1
-        pygame.draw.polygon(ant_surf, color, lines, width)
-
-        ant_surf = pygame.transform.rotate(ant_surf, -60 * ant._direction)
-
-        padding = (ant_surf.get_rect()[2] - (size*4))/2
+            ant_surf = pygame.surface.Surface((4*SIZE,4*SIZE), flags=pygame.SRCALPHA)
 
 
-        window.blit(ant_surf, (x*size+sx - padding, y*size + sy - padding))
+            lines = ((4*size,2*size),
+                     (0*size, 1*size),
+                     (0*size, 3*size))
+
+            width = 0 if ant._has_food else 1
+            pygame.draw.polygon(ant_surf, color, lines, width)
+
+            ant_surf = pygame.transform.rotate(ant_surf, -60 * ant._direction)
+
+            padding = (ant_surf.get_rect()[2] - (size*4))/2
+
+
+            window.blit(ant_surf, (x*size+sx - padding, y*size + sy - padding))
+        except Exception as e:
+            pass
 
 
     def _draw_markers(self, window, markers, x, y, size, sx, sy):
