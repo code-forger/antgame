@@ -29,7 +29,8 @@ class Brain:
         self.alive = True
         RANDOM(12345)
         #self._rand_gen = get_random
-        self._rand_gen = make_rand_gen(random.randint(0, 10000))
+        #self._rand_gen = make_rand_gen(random.randint(0, 10000))
+        self._rand_gen = lambda x: random.randint(0,x)
 
     @property
     def color(self):
@@ -292,30 +293,27 @@ def adjacent_cell(pos, dir):
    
 def sensed_cell(pos, dir, sense_dir):
     """Returns the coordinates of the cell being sensed."""
-    cell = {}
-    cell["here"] = pos
-    cell["ahead"] = adjacent_cell(pos, dir)
-    cell["leftahead"] = adjacent_cell(pos, turn("left", dir))
-    cell["rightahead"] = adjacent_cell(pos, turn("right", dir))
-
-    return cell[sense_dir]
+    if sense_dir == "here":
+        return pos
+    elif sense_dir == "ahead":
+        return adjacent_cell(pos, dir)
+    elif sense_dir == "leftahead":
+        return adjacent_cell(pos, turn("left", dir))
+    return adjacent_cell(pos, turn("right", dir))
 
    
 def turn(lr, dir):
     """Returns the new turned direction."""
-    next_dir = {}
-    next_dir["left"] = (dir+5) % 6
-    next_dir["right"] = (dir+1) % 6
-    return next_dir[lr]
+    if lr == "left":
+        return (dir+5) % 6
+    return(dir+1) % 6
 
  
 def other_color(color):
     """Returns the opposite color of the ant."""
-    opposite_color = {}
-    opposite_color["red"] = "black"
-    opposite_color["black"] = "red"
-
-    return opposite_color[color]
+    if color == "red":
+        return "black"
+    return "red"
 
    
 def rocky(world, pos):
@@ -349,21 +347,28 @@ def cell_matches(world, pos, cond, color):
 
     if cond[0] == "marker":
         return check_marker_at(world, pos, color, cond[1])
-
     other_type = {}
-    other_type["food"] = world[x][y]["foods"] > 0
-    other_type["rock"] = False
-    other_type["foemarker"] = any_marker_at(world, pos, other_color(color))
-    other_type["home"] = (world[x][y]["hill"] == color)
-    other_type["foehome"] = (world[x][y]["hill"] == other_color(color))
+    if cond[0] == "food":
+        return world[x][y]["foods"] > 0
+    elif cond[0] == "rock":
+        return False
+    elif cond[0] == "foemarker":
+        return any_marker_at(world, pos, other_color(color))
+    elif cond[0] == "home":
+        return (world[x][y]["hill"] == color)
+    elif cond[0] == "foehome": 
+        return (world[x][y]["hill"] == other_color(color))
 
 
     if ant is not None and cond[0] not in other_type:
-        ant_type = {}
-        ant_type["friend"] = (ant.color == color)
-        ant_type["foe"] = not ant_type["friend"]
-        ant_type["friendwithfood"] = ant_type["friend"] and ant.has_food
-        ant_type["foewithfood"] = ant_type["foe"] and ant.has_food
+        if cond[0] == "friend":
+            return (ant.color == color)
+        elif cond[0] == "foe":
+            return not (ant.color == color)
+        if cond[0] == "friendwithfood":
+            return (ant.color == color) and ant.has_food
+        if cond[0] == "foewithfood":
+            return not (ant.color == color) and ant.has_food
 
         return ant_type[cond[0]]
 
