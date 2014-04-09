@@ -4,6 +4,7 @@ import time
 
 import world_gen
 from guppy import hpy
+import renderer
 
 BLACK = "-"
 ROCK = "#"
@@ -27,6 +28,8 @@ class Engine(Thread):
 		self._world = None
 		self._current_step = "-1"
 		brain.Brain.attach_gui(gui)
+		self._all_ants = []
+		self._ordered = []
 
 		self._game_stats = {"current_step_of_game":0,
 						   "red_alive":0,
@@ -40,19 +43,32 @@ class Engine(Thread):
 		self.id = str(id)
 
 	def do(self):
-		if self._current_step % 5000 == 0:
-			h = hpy()
-			print h.heap()
-		for ant in self._red_ants:
-			if ant.alive:
-				self._update_ant(ant)
-			else:
-				self._red_ants.remove(ant)
-		for ant in self._black_ants:
-			if ant.alive:
-				self._update_ant(ant)
-			else:
-				self._black_ants.remove(ant)
+		for a in self._ordered:
+			x,y = a._position
+			if self._is_alive(a,x,y):
+				self._update_ant(a)
+		for a in self._ordered:
+			x,y = a._position
+
+			if not self._is_alive(a,x,y):
+				print "KILLING"
+				self._world[x][y]["foods"] += 3
+				self._world[x][y]["ant"] = None
+				if (a._color == "red"):
+					self._game_stats["red_dead_redemption"] += 1
+					self._game_stats["red_alive"] -= 1
+					self._red_ants.remove(a)
+				else:
+					self._game_stats["black_dead"] += 1
+					self._game_stats["black_alive"] -= 1
+					self._black_ants.remove(a)
+				self._ordered.remove(a)
+
+		#for x in self._world:
+		#	for cell in x:
+		#		if cell["ant"] != None:
+		#			self._update_ant(cell["ant"])
+
 
 	def run(self):
 		while True:
@@ -68,17 +84,24 @@ class Engine(Thread):
 					elif  (message[2]) == "black":
 						#print "engine ", self.id, " has received its black brain"
 						self._black_brain = ant_brain
+					print "DONE BRAIN"
 
 				elif (message[0]) == "load world":
+					#try:
+					self._current_step = -1
+					self._world = self._parse_world(message[1])
+					self._messages_to_renderer.append(["draw_world", self._world, self.id])
+					self._game_stats["red_alive"] = len(self._red_ants)
+					self._game_stats["black_alive"] = len(self._black_ants)
+					self._all_ants = self._red_ants[:]
+					self._all_ants.extend(self._black_ants)
 					try:
-						self._current_step = -1
-						self._world = self._parse_world(message[1])
-						self._messages_to_renderer.append(["draw_world", self._world, self.id])
-						self._game_stats["red_alive"] = len(self._red_ants)
-						self._game_stats["black_alive"] = len(self._black_ants)
 						self._gui.change_game_stats(self._game_stats)
 					except Exception as e:
-						self._world = None
+						print "DEFFO THIS"
+					#except Exception as e:
+						#self._world = None
+					print "DONE WORLD", self._world is None
 
 
 				elif (message[0]) == "generate world":
@@ -90,37 +113,65 @@ class Engine(Thread):
 						self._messages_to_renderer.append(["draw_world", self._world, self.id])
 						self._game_stats["red_alive"] = len(self._red_ants)
 						self._game_stats["black_alive"] = len(self._black_ants)
-						self._gui.change_game_stats(self._game_stats)
+						self._all_ants = self._red_ants[:]
+						self._all_ants.extend(self._black_ants)
+						try:
+							self._gui.change_game_stats(self._game_stats)
+						except Exception as e:
+							pass
 					except Exception as e:
 						self._world = None
 				elif (message[0]) == "step world":
-					if self._world == None or self._red_brain == None or self._black_brain == None:
-						pass
-					else:
-						self._messages_from_gui[:] = [m for m in self._messages_from_gui if m != "step world"]
-						old_stats = dict(self._game_stats)
-						if self._current_step == -1:
-							for ant in self._red_ants:
-								ant._states = self._red_brain
-							for ant in self._black_ants:
-								ant._states = self._black_brain
-							self._current_step = 0
-						elif self._current_step == 30000:
-							self._gui.change_game_stats(self._game_stats)
-						else:
-							self.do()
-							if old_stats == self._game_stats:
-								self._current_step += 1
-								self._game_stats["current_step_of_game"] = self._current_step
-								self._messages_to_renderer.append(["draw_world", self._world, self.id])
-								self._gui.change_game_stats(self._current_step)	
-							else:
-								self._current_step += 1
-								self._game_stats["current_step_of_game"] = self._current_step
-								self._messages_to_renderer.append(["draw_world", self._world, self.id])
-								self._gui.change_game_stats(self._game_stats)	
+					self.step_world(message)	
 
 			time.sleep(.001)
+
+	def step_world(self, message):
+		if self._world == None or self._red_brain == None or self._black_brain == None:
+			print "THIS"
+			sys.exit()
+		else:
+			self._messages_from_gui[:] = [m for m in self._messages_from_gui if m != "step world"]
+			old_stats = dict(self._game_stats)
+			if self._current_step == -1:
+				for ant in self._red_ants:
+					ant._states = self._red_brain
+				for ant in self._black_ants:
+					ant._states = self._black_brain
+				skipper = 0
+				for i in range(len(self._all_ants)):
+					steped = False
+					while (True):
+						for a in self._all_ants:
+							if a.brain_id == i+skipper:
+								self._ordered.append(a)
+								steped = True
+								break
+						if steped == True:
+							break
+						else:
+							skipper+=1
+				self._current_step = 0
+			elif self._current_step == 30000:
+				self._gui.change_game_stats(self._game_stats)
+			else:
+				self.do()
+				if old_stats == self._game_stats:
+					self._current_step += 1
+					self._game_stats["current_step_of_game"] = self._current_step
+					self._messages_to_renderer.append(["draw_world", self._world, self.id])
+					try:
+						self._gui.change_game_stats(self._current_step)
+					except Exception as e:
+							pass	
+				else:
+					self._current_step += 1
+					self._game_stats["current_step_of_game"] = self._current_step
+					self._messages_to_renderer.append(["draw_world", self._world, self.id])
+					try:	
+						self._gui.change_game_stats(self._game_stats)
+					except Exception as e:
+							pass
 
 
 	def _make_cell(self, ant=None, rock=False, markers=[], foods=0, hill=None):
@@ -134,8 +185,10 @@ class Engine(Thread):
 			if col == ROCK:
 				parsed.append(self._make_cell(rock=True))
 			else:
-				self._gui.change_world_details("Expected only #")
-				return None
+				try:
+					self._gui.change_world_details("Expected only #")
+				finally:
+					return None
 
 		return parsed
 
@@ -147,8 +200,10 @@ class Engine(Thread):
 		if row[0] == ROCK:
 			parsed.append(self._make_cell(rock=True))
 		else:
-			self._gui.change_world_details("Expected perimeter at beginning.")
-			return None
+			try:
+				self._gui.change_world_details("Expected perimeter at beginning.")
+			finally:
+				return None
 
 
 		current_col = 2
@@ -164,12 +219,12 @@ class Engine(Thread):
 				try:
 					if col == RED:
 						cell["hill"] = "red"
-						cell["ant"] = brain.Brain(self._num_of_ants,self._red_brain,(current_row-1,current_col-1), "red")
+						cell["ant"] = brain.Brain(self._num_of_ants,self._red_brain,(current_col-1,current_row-1), "red")
 						self._num_of_ants += 1
 						self._red_ants.append(cell["ant"])
 					elif col == BLACK:
 						cell["hill"] = "black"
-						cell["ant"] = brain.Brain(self._num_of_ants,self._black_brain,(current_row-1,current_col-1), "black")
+						cell["ant"] = brain.Brain(self._num_of_ants,self._black_brain,(current_col-1,current_row-1), "black")
 						self._num_of_ants += 1
 						self._black_ants.append(cell["ant"])
 					elif col == NONE:
@@ -178,12 +233,16 @@ class Engine(Thread):
 						cell["foods"] = int(col)
 						self._foods += int(col)
 					else:
-						self._gui.change_world_details(col_count + "Expected +|-|.|#|1-9")
-						return None
+						try:
+							self._gui.change_world_details(col_count + "Expected +|-|.|#|1-9")
+						finally:
+							return None
 
 				except ValueError as err:
-					self._gui.change_world_details(col_count + "Expected a number")
-					return None
+					try:
+						self._gui.change_world_details(col_count + "Expected a number")
+					finally:
+						return None
 
 
 				parsed.append(cell)
@@ -193,8 +252,10 @@ class Engine(Thread):
 		if row[-1] == ROCK:
 			parsed.append(self._make_cell(rock=True))
 		else:
-			self._gui.change_world_details("Expected perimeter at end.")
-			return None
+			try:
+				self._gui.change_world_details("Expected perimeter at end.")
+			finally:
+				return None
 
 
 		return parsed
@@ -212,7 +273,8 @@ class Engine(Thread):
 		if response[0] == "mark":
 			# TODO: Please revise as it was just a quick fix
 			# Delete TODO comment if it seems fine
-			self._world[x][y]["markers"].append((response[1], ant.color))
+			if (response[1], ant.color) not in self._world[x][y]["markers"]:
+				self._world[x][y]["markers"].append((response[1], ant.color))
 
 		elif response[0] == "unmark":
 			# TODO: Please revise as it was just a quick fix
@@ -243,25 +305,14 @@ class Engine(Thread):
 				self._world[x][y]["ant"] = None
 				self._world[new_x][new_y]["ant"] = ant
 				ant._position = new_x, new_y
-				if self._is_alive(ant, new_x, new_y) == False:
-					self._world[new_x][new_y]["ant"].alive = False
-					self._world[new_x][new_y]["ant"] = None
-					if (ant._color == "red"):
-						self._game_stats["red_dead_redemption"] += 1
-						self._game_stats["red_alive"] -= 1
-						self._red_ants.remove(ant)
-					else:
-						self._game_stats["black_dead"] += 1
-						self._game_stats["black_alive"] -= 1
-						self._black_ants.remove(ant)
 
-		elif response[0] == "turn-left":
+		elif response[0] == "turn-right":
 			if ant._direction < 5:
 				ant._direction += 1
 			else:
 				ant._direction = 0
 
-		elif response[0] == "turn-right":
+		elif response[0] == "turn-left":
 			if ant._direction > 0:
 				ant._direction -= 1
 			else:
@@ -318,15 +369,24 @@ class Engine(Thread):
 
 	def _is_alive(self, ant, x, y):
 		"""Checks if ant is still alive after move"""
-
+		count = 0
 		if y % 2 == 0:
-			if sum([1 if (self._world[xx][yy]["ant"] != None and self._world[xx][yy]["ant"].color != ant.color) else 0 for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1))]) >= 5:
-				return False
+			for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1)):
+				if self._world[xx][yy]["ant"] == None:
+					count += 1
+				elif self._world[xx][yy]["ant"].color == ant.color:
+					count += 1
+				if count >= 2:
+					return True
 		else:
-			if sum([1 if (self._world[xx][yy]["ant"] != None and self._world[xx][yy]["ant"].color != ant.color) else 0 for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1))]) >= 5:
-				return False
-
-		return True
+			for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1)):
+				if self._world[xx][yy]["ant"] == None:
+					count += 1
+				elif self._world[xx][yy]["ant"].color == ant.color:
+					count += 1
+				if count >= 2:
+					return True
+		return False
 
 	def _parse_world(self, path):
 		"""Returns a complete tokenized world after parsing."""
@@ -380,9 +440,108 @@ class Engine(Thread):
 			return None
 		final.append(bottom_row)
 
+		try:
+			self._gui.change_world_details("File: " + path + "\n" + 
+										   "Size: 150 * 150\n" + 
+										   "Ants: " + str(len(self._red_ants) + len(self._black_ants)) + "\n"
+										   "Food: " + str(self._foods))
+		finally:
 
-		self._gui.change_world_details("File: " + path + "\n" + 
-									   "Size: 150 * 150\n" + 
-									   "Ants: " + str(len(self._red_ants) + len(self._black_ants)) + "\n"
-									   "Food: " + str(self._foods))
-		return final
+			return zip(*final)
+
+
+if __name__ == "__main__":
+	def get_state(world, expected):
+		for i, x in enumerate(world):
+			for j, c in enumerate(x):
+				cell = world[j][i]
+				string = ""
+				string += "cell ("+str(j)+", "+str(i)+"): "
+				if cell["rock"]:
+					string += "rock"
+				if cell["foods"] > 0:
+					string += str(cell["foods"])+" food; "
+				if cell["hill"] is not None:
+					string += cell["hill"]+" hill; "
+				red = []
+				black = []
+				for m in cell["markers"]:
+					if m[1] == "red":
+						red.append(m[0])
+					else:
+						black.append(m[0])
+				if len(red) > 0:
+					string += "red marks: "
+					red.sort()
+					for x in red:
+						string += str(x)
+					string += "; "
+
+				if len(black) > 0:
+					string += "black marks: "
+					black.sort()
+					for x in black:
+						string += str(x)
+					string += "; "
+
+				if cell["ant"] is not None:
+					a = cell["ant"]
+					h = "0"
+					if a._has_food:
+						h = "1"
+					string += a._color+" ant of id "+str(a.brain_id)+", dir "+str(a._direction)+", food "+h+", state "+str(a._state)+", resting "+str(a._rest_time)+""
+				string += "\n"
+				string == expected[j + i*len(world)]
+				#if j == 5 and i == 2:
+				#	print "!"
+				#	print "exp:",expected[j + i*len(world)]
+				#	print "got:",string
+				#	print "x"
+				if not string.strip() == expected[j + i*len(world)].strip():
+					print "NOOOOOOOOO"
+					print ""
+					print "exp:",expected[j + i*len(world)]
+					print "got:",string
+					print ""
+	print "this"
+	messages_to_engine = []
+	_messages_to_runner = messages_to_runner = []
+	messages_between_engine_and_renderer = []
+	game_engine = Engine(-1,messages_to_engine, messages_between_engine_and_renderer, None)
+	game_engine.start()
+
+	world_renderer = renderer.Renderer(messages_between_engine_and_renderer)
+	world_renderer.start()
+
+	messages_to_engine.append(["load world", "tester.world"])
+	messages_to_engine.append(["load brain", "tester.brain", "red"])
+	messages_to_engine.append(["load brain", "tester.brain", "black"])
+	print "this"
+	time.sleep(1)	
+
+	expected = []
+
+	with open("dump.all") as f:
+		while (True):
+			step = []
+			while (True):
+				l = f.readline()
+				#print l[:3], l[:3] == "..."
+				if l == "" or l[:3] == "...":
+					break
+				step.append(l.strip())
+			if len(step) == 0:
+				break
+			expected.append(step)
+
+
+	print game_engine._current_step < 100
+	game_engine.step_world([""])
+	time.sleep(.1)	
+
+	while game_engine._current_step < 10000:
+		print game_engine._current_step
+		game_engine.step_world([""])
+		get_state(game_engine._world,expected[game_engine._current_step])
+	
+	time.sleep(1000)	

@@ -10,12 +10,14 @@ import gtk
 import gtk.glade
 import glib
 from guppy import hpy
+import yappi
 
 import math
 
 class Gui:
 	def __init__(self):
 		gtk.threads_init()
+		yappi.start()
 
 		def window_main_destroy(widget, data=None):
 			gtk.main_quit()
@@ -322,6 +324,8 @@ class Gui:
 
 		window_main.set_keep_above(True)
 		gtk.main()
+		yappi.get_func_stats().print_all()
+
 		
 	def change_world_details(self, message):
 		gtk.idle_add(self.label_details_of_world.set_text, message)
@@ -366,4 +370,5 @@ class Gui:
 
 
 if __name__ == "__main__":
+	print "this"
 	gui = gui.Gui()

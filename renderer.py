@@ -32,11 +32,12 @@ class Renderer(threading.Thread):
         cl = pygame.time.Clock()
         sx = 0
         sy = 0
-        overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-        background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+        WSIZE = 150
+        overlay = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
+        background = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
         background.fill((255,255,255,0))
-        for x in range(150):
-            for y in range(150):
+        for x in range(WSIZE):
+            for y in range(WSIZE):
                 self._draw_hexagon(background, x, y, SIZE, 0,0)
         while(True):
             time = cl.tick(10)
@@ -54,17 +55,17 @@ class Renderer(threading.Thread):
                         if SIZE > 10:
                             SIZE = 10
                         if oldsize != SIZE:
-                            overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                            background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            overlay = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
+                            background = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
                             background.fill((255,255,255,0))
-                            for x in range(150):
-                                for y in range(150):
+                            for x in range(WSIZE):
+                                for y in range(WSIZE):
                                     self._draw_hexagon(background, x, y, SIZE, 0,0)
 
                             overlay.fill((255,255,255,0))
 
-                            for x in range(150):
-                                for y in range(150):
+                            for x in range(WSIZE):
+                                for y in range(WSIZE):
                                     if self._world:
                                         if len(self._world[x][y]["markers"]):
                                             self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
@@ -83,17 +84,17 @@ class Renderer(threading.Thread):
                             SIZE = 1
                         if oldsize != SIZE:
 
-                            overlay = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
-                            background = pygame.surface.Surface((150 * SIZE * 4, 150 *  SIZE * 4), pygame.SRCALPHA)
+                            overlay = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
+                            background = pygame.surface.Surface((WSIZE * SIZE * 4, WSIZE *  SIZE * 4), pygame.SRCALPHA)
                             background.fill((255,255,255,0))
-                            for x in range(150):
-                                for y in range(150):
+                            for x in range(WSIZE):
+                                for y in range(WSIZE):
                                     self._draw_hexagon(background, x, y, SIZE, 0,0)
                             
                             overlay.fill((255,255,255,0))
 
-                            for x in range(150):
-                                for y in range(150):
+                            for x in range(WSIZE):
+                                for y in range(WSIZE):
                                     if self._world:
                                         if len(self._world[x][y]["markers"]):
                                             self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
@@ -126,15 +127,17 @@ class Renderer(threading.Thread):
                 message = self._messages_from_engine.pop(-1)
                 self._messages_from_engine[:] = []
                 if message[0] == "draw_world":
+                    #print "RENDERINIG"
 
-                    self._world = message[1]   
+                    self._world = message[1] 
+                    WSIZE = len(self._world)
 
 
                     overlay.fill((255,255,255,0))
 
 
-                    for x in range(150):
-                        for y in range(150):
+                    for x in range(WSIZE):
+                        for y in range(WSIZE):
                             if self._world:
                                 if len(self._world[x][y]["markers"]):
                                     self._draw_markers(overlay, self._world[x][y]["markers"], x, y, SIZE, 0,0)
