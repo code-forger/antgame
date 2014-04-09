@@ -1,5 +1,4 @@
 import random
-from memory_profiler import memory_usage
 '''
 sense sensedir st1 st2 cond     Go to state st1 if cond holds in sensedir;
         and to state st2 otherwise.

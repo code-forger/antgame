@@ -3,7 +3,6 @@ from threading import Thread
 import time
 
 import world_gen
-from guppy import hpy
 
 BLACK = "-"
 ROCK = "#"
@@ -40,9 +39,6 @@ class Engine(Thread):
 		self.id = str(id)
 
 	def do(self):
-		if self._current_step % 5000 == 0:
-			h = hpy()
-			print h.heap()
 		for ant in self._red_ants:
 			if ant.alive:
 				self._update_ant(ant)
