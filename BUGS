@@ -1,5 +1,0 @@
-
->>Foods under antworld panel should not be named foods... improper use of english # NOT A BUG A GOOD CHOICE
-
-
->>if mix of vaild and invalid worlds are passed, valid worlds render and run, invailids do not. Need to stop all rendering and tell the user something is wrong

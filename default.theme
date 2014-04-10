@@ -1,0 +1,12 @@
+{
+	"black_ant_hill": null,
+	"red_ant_hill": null,
+	"black_marker": [200, 200, 200],
+	"background": [255, 255, 255],
+	"food": [0, 0, 255],
+	"red_ant": [255, 0, 0],
+	"cell_border": [200, 200, 200],
+	"red_marker": [255, 200, 200],
+	"black_ant": [0, 0, 0],
+	"rocks": [0, 0, 0]
+}
