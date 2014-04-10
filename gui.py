@@ -43,6 +43,10 @@ class Gui:
 		def message_to_step_engine(widget, data=None):
 			messages_to_engine.append(["step world"])
 
+		def message_to_load_theme(widget, data=None):
+			print "THIS"
+			messages_between_engine_and_renderer.append(["load theme", widget.get_filename()])
+
 
 		self._num_of_worlds_remaining = 0
 		self._num_of_players_remaining = 0
@@ -263,6 +267,10 @@ class Gui:
 		self._tournament_stats = {}
 		for name in tournament_stat_controls:
 			self._tournament_stats[name] = get_tab_tournament_widget("label_"+name)
+
+
+		get_widget("theme_chooser").connect("file-set", message_to_load_theme)
+
 
 
 

@@ -258,7 +258,7 @@ class Brain:
                     instructions.append([words[0], int(words[1]), int(words[2]), int(words[3])])
                 else:
                     try:
-                        Brain.gui.change_brain_details("The first word on line: " + str(i + 1) + " is " + words[0] + " and should be  either 'sense', 'mark', 'unmark', 'pickup', 'drop', 'turn', 'move', 'flip'",color)
+                        Brain.gui.change_brain_details("The first word on line: " + str(i + 1) + " is " + words[0] + "\nand should be  either 'sense', 'mark', 'unmark', 'pickup',\n'drop', 'turn', 'move', 'flip'",color)
                     finally:
                             return None
         try:

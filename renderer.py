@@ -125,6 +125,13 @@ class Renderer(threading.Thread):
 
             if len(self._messages_from_engine) > 0:
                 message = self._messages_from_engine.pop(-1)
+                for m in self._messages_from_engine:
+                    if m[0] == "load theme":
+                        try:
+                            with open(m[1], "r") as f:
+                                self._colours = json.loads(f.read())
+                        except Exception as e:
+                            pass
                 self._messages_from_engine[:] = []
                 if message[0] == "draw_world":
                     #print "RENDERINIG"
