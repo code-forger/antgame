@@ -1,0 +1,77 @@
+Simple Bugs:
+These bugs were ones found before testing that were trivial to solve, Many of them are simply typos, or slight oversights on the orriginal programmers part
+
+>> Tabs Are Not Named Properly:
+before: -> http://michaelrochester.com/project_images/bugs/bad_tab_name.png
+After: -> http://michaelrochester.com/project_images/bugs/good_tab_name.png
+
+>>under game stats, step is not capitalised like so... Steps
+before: -> http://michaelrochester.com/project_images/bugs/bas_step_name.png
+after: -> http://michaelrochester.com/project_images/bugs/geed_step_name.png
+
+>>Under the tournament tab, tornament gets shifted upwards and there is a large padding between tornament title and spinners below
+before: -> http://michaelrochester.com/project_images/bugs/bad_tournament_placement.png
+after: -> http://michaelrochester.com/project_images/bugs/good_tournament_placing.png
+
+>>tournament tab file chooser info does not change from file: redbrain and states: 1305
+Removed name all together.
+before: -> http://michaelrochester.com/project_images/bugs/bad_load_file.png
+after: -> http://michaelrochester.com/project_images/bugs/good_name_change.png
+
+
+>>when selecting ant world in tornament you cannot change world or player after selection also does not state if correct file has been passed
+Part one fixed already
+part two: this cannot be done here, the player must validate files using the classic mode window.
+
+
+
+>>placeholder does not appear for tornament number of players
+before: http://michaelrochester.com/project_images/bugs/bad_placeholder.png
+after: http://michaelrochester.com/project_images/bugs/good_placeholders.png
+
+
+
+>>Foods under antworld panel should not be named foods... improper use of english # NOT A BUG before: http://michaelrochester.com/project_images/bugs/foods.png
+after: http://michaelrochester.com/project_images/bugs/foods_fixed.png
+
+
+>>begin setup button changes size, and anchors directly below the spinners
+COULD NOT REPRODUCE
+
+
+Big Bugs
+Renderer crash:
+>>File "/home/matthew/Documents/Ant/trunk/renderer.py", line 198, in _draw_ant
+    if ant.color == "red":
+AttributeError: 'NoneType' object has no attribute 'color'
+
+This Bug was dificult to track down. Due its nature, Its a race condition between the engine and the renderer. It is due to the fact that the renderer and the engine share the same instance of the world object, and run on different threads. Between the world deciding there is an ant in a particualr cell, and it getting the color of that ant, then engine moves the ant, hence making 'ant' in the error None.
+
+We came up with two fixes:
+Fix 1: clone the world object before sending it to the renderer, this would prevent the engine from being able to change the renderers copy of the world.
+Rejected: this fix was rejected as it took almost half a second to clone the world, impeding either the renderer or the engine from progressing. This delay was deemed too significant.
+
+Fix 2: render the ant in a try catch block, this means we catch the error, and can pass withought the renderer crashing.
+The problem with this solution is that the ant in question would not get rendererd for one frame, however, since a frame is so quick, it was deemed the better fix for the problem.
+
+Big Bug Two, The 12GB memory leak
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXATTACH SCREENSHOT FROM FACEBOOK HERE XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+This bug was reasonably easy to track down, using a memory profiler (guppy), I was able to determin that somewhere in our code a list of longs was being created (a pretty huge list) these objects were being stored in a list that was still referenced meaning that they were never garbage collected, running annother memory profiler (https://pypi.python.org/pypi/memory_profiler) i was able to track this down to the random number genorator, the generator was keeping a history of every number it generated. By simply not storing this list, the memory leak was plugged. Running a profiler again we got stable memory usage throughout a match.
+
+
+
+Bugs Found while testing:
+While testing we found many subtle bugs in the engine and brain of the game, unfortunately these are bugs that are hard to screenshot, since our only error was that our game state did not match the expected game state in the dump.
+
+column major?
+We quickly found out that the world was being generated in the other major axis to the rest of the engine, by simply flipping the world after it is generate we were able to fix this withough rewriting all our code.
+
+Killing Ants:
+We discovered that checking for dead ants only after they move was incorrect, since one ant moving can result in annother ants dimise. to fix this, we check if all ants are alive on every step, unfortunately this is very costly in efficency and led to a low frame rate, unfortunately we have no choice but to keep the fix.
+
+No you cant move there,
+We found that when an ant fails to make a move (because its block) it jumps to the wrong instruction, a simple typo, we rectified this easily.
+
+Flip a coin.
+we found that the wrong state was jumped to, simply reversing the order of the choice in the flip algorythm fixed this

@@ -3,8 +3,6 @@ from threading import Thread
 import time
 
 import world_gen
-from guppy import hpy
-import renderer
 
 BLACK = "-"
 ROCK = "#"
