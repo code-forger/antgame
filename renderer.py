@@ -24,7 +24,7 @@ class Renderer(threading.Thread):
         self._selected = "-1"
         self._profile = [0 for x in range(100)]
 
-        with open("titan.theme", "r") as f:
+        with open("default.theme", "r") as f:
             self._colours = json.loads(f.read())
 
     def run(self):
