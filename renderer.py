@@ -5,14 +5,13 @@ import json
 import pygame
 from pygame.locals import *
 
-import sgc
 
 pygame.display.init()
 pygame.font.init()
 
 SIZE = 4
 
-window = sgc.surface.Screen((1024,768),flags=pygame.DOUBLEBUF|pygame.RESIZABLE)
+window = pygame.display.set_mode((1024,768),pygame.DOUBLEBUF|pygame.RESIZABLE)
 
 class Renderer(threading.Thread):
     def __init__(self, messages_from_engine):
@@ -43,7 +42,6 @@ class Renderer(threading.Thread):
             time = cl.tick(10)
 
             for event in pygame.event.get():
-                sgc.event(event)
                 if event.type == MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self._dragging = True
@@ -115,7 +113,7 @@ class Renderer(threading.Thread):
                             self._mouse = event.pos
                 if event.type == VIDEORESIZE:
                     global window
-                    window = sgc.surface.Screen(event.size,flags=pygame.DOUBLEBUF|pygame.RESIZABLE)
+                    window = pygame.display.set_mode((1024,768),pygame.DOUBLEBUF|pygame.RESIZABLE)
 
                     window.fill(self._colours["background"])
 
@@ -167,8 +165,6 @@ class Renderer(threading.Thread):
 
             window.blit(background, (sx,sy))
         
-            
-            #sgc.update(time)
 
             pygame.display.flip()
 
