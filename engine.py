@@ -44,25 +44,10 @@ class Engine(Thread):
 
 	def do(self):
 		for a in self._ordered:
-			x,y = a._position
-			if self._is_alive(a,x,y):
+			#x,y = a._position
+			#if self._is_alive(a,x,y):
+			if a.alive:
 				self._update_ant(a)
-		for a in self._ordered:
-			x,y = a._position
-
-			if not self._is_alive(a,x,y):
-				print "KILLING"
-				self._world[x][y]["foods"] += 3
-				self._world[x][y]["ant"] = None
-				if (a._color == "red"):
-					self._game_stats["red_dead_redemption"] += 1
-					self._game_stats["red_alive"] -= 1
-					self._red_ants.remove(a)
-				else:
-					self._game_stats["black_dead"] += 1
-					self._game_stats["black_alive"] -= 1
-					self._black_ants.remove(a)
-				self._ordered.remove(a)
 
 		#for x in self._world:
 		#	for cell in x:
@@ -127,51 +112,47 @@ class Engine(Thread):
 			time.sleep(.001)
 
 	def step_world(self, message):
-		if self._world == None or self._red_brain == None or self._black_brain == None:
-			print "THIS"
-			sys.exit()
-		else:
-			self._messages_from_gui[:] = [m for m in self._messages_from_gui if m != "step world"]
-			old_stats = dict(self._game_stats)
-			if self._current_step == -1:
-				for ant in self._red_ants:
-					ant._states = self._red_brain
-				for ant in self._black_ants:
-					ant._states = self._black_brain
-				skipper = 0
-				for i in range(len(self._all_ants)):
-					steped = False
-					while (True):
-						for a in self._all_ants:
-							if a.brain_id == i+skipper:
-								self._ordered.append(a)
-								steped = True
-								break
-						if steped == True:
+		self._messages_from_gui[:] = [m for m in self._messages_from_gui if m != "step world"]
+		old_stats = dict(self._game_stats)
+		if self._current_step == -1:
+			for ant in self._red_ants:
+				ant._states = self._red_brain
+			for ant in self._black_ants:
+				ant._states = self._black_brain
+			skipper = 0
+			for i in range(len(self._all_ants)):
+				steped = False
+				while (True):
+					for a in self._all_ants:
+						if a.brain_id == i+skipper:
+							self._ordered.append(a)
+							steped = True
 							break
-						else:
-							skipper+=1
-				self._current_step = 0
-			elif self._current_step == 30000:
-				self._gui.change_game_stats(self._game_stats)
+					if steped == True:
+						break
+					else:
+						skipper+=1
+			self._current_step = 0
+		elif self._current_step == 30000:
+			self._gui.change_game_stats(self._game_stats)
+		else:
+			self.do()
+			if old_stats == self._game_stats:
+				self._current_step += 1
+				self._game_stats["current_step_of_game"] = self._current_step
+				self._messages_to_renderer.append(["draw_world", self._world, self.id])
+				try:
+					self._gui.change_game_stats(self._current_step)
+				except Exception as e:
+						pass	
 			else:
-				self.do()
-				if old_stats == self._game_stats:
-					self._current_step += 1
-					self._game_stats["current_step_of_game"] = self._current_step
-					self._messages_to_renderer.append(["draw_world", self._world, self.id])
-					try:
-						self._gui.change_game_stats(self._current_step)
-					except Exception as e:
-							pass	
-				else:
-					self._current_step += 1
-					self._game_stats["current_step_of_game"] = self._current_step
-					self._messages_to_renderer.append(["draw_world", self._world, self.id])
-					try:	
-						self._gui.change_game_stats(self._game_stats)
-					except Exception as e:
-							pass
+				self._current_step += 1
+				self._game_stats["current_step_of_game"] = self._current_step
+				self._messages_to_renderer.append(["draw_world", self._world, self.id])
+				try:	
+					self._gui.change_game_stats(self._game_stats)
+				except Exception as e:
+						pass
 
 
 	def _make_cell(self, ant=None, rock=False, markers=[], foods=0, hill=None):
@@ -300,11 +281,34 @@ class Engine(Thread):
 
 		elif response[0] == "move":
 			new_x, new_y = self._apply_move(ant._direction, x, y)
+			self._world[x][y]["ant"] = None
+			self._world[new_x][new_y]["ant"] = ant
+			ant._position = new_x, new_y
 
-			if self._world[new_x][new_y]["rock"] == False and self._world[new_x][new_y]["ant"] == None:
+			for a in self._get_adj(ant, new_x, new_y):
+				x,y = a._position
+				if not self._is_alive(a,x,y):
+					a.alive = False
+					self._world[x][y]["foods"] += 3
+					self._world[x][y]["ant"] = None
+					if (a._color == "red"):
+						self._game_stats["red_dead_redemption"] += 1
+						self._game_stats["red_alive"] -= 1
+					else:
+						self._game_stats["black_dead"] += 1
+						self._game_stats["black_alive"] -= 1
+
+			x,y = ant._position
+			if not self._is_alive(ant,x,y):
+				ant.alive = False
+				self._world[x][y]["foods"] += 3
 				self._world[x][y]["ant"] = None
-				self._world[new_x][new_y]["ant"] = ant
-				ant._position = new_x, new_y
+				if (ant._color == "red"):
+					self._game_stats["red_dead_redemption"] += 1
+					self._game_stats["red_alive"] -= 1
+				else:
+					self._game_stats["black_dead"] += 1
+					self._game_stats["black_alive"] -= 1
 
 		elif response[0] == "turn-right":
 			if ant._direction < 5:
@@ -317,6 +321,18 @@ class Engine(Thread):
 				ant._direction -= 1
 			else:
 				ant._direction = 5
+
+	def _get_adj(self, ant, x,y):
+		ants = []
+		if y % 2 == 0:
+			for xx, yy in ((x+1,y), (x-1,y), (x-1,y+1),(x,y+1),(x-1,y-1),(x,y-1)):
+				if self._world[xx][yy]["ant"] != None:
+					ants.append(self._world[xx][yy]["ant"])
+		else:
+			for xx, yy in ((x+1,y), (x-1,y), (x+1,y+1),(x,y+1),(x+1,y-1),(x,y-1)):
+				if self._world[xx][yy]["ant"] != None:
+					ants.append(self._world[xx][yy]["ant"])
+		return ants
 
 
 	def _apply_move(self, d, x, y):
@@ -365,6 +381,7 @@ class Engine(Thread):
 				y -= 1
 
 		return x, y
+
 
 
 	def _is_alive(self, ant, x, y):
@@ -451,6 +468,23 @@ class Engine(Thread):
 
 
 if __name__ == "__main__":
+
+	class RANDOM():
+	    def __init__(self, seed):
+	        RANDOM.S = []
+	        RANDOM.S.append(seed)
+
+	        for i in xrange(0, 4):
+	            RANDOM.S.append(RANDOM.S[-1] * 22695477 + 1)
+
+	def get_random(cls, n):
+	    if n > 0:
+	        x = (RANDOM.S[-1] / 65536) % 16384
+	        RANDOM.S[-1] = RANDOM.S[-1] * 22695477 + 1
+
+	        return int(x % n)
+	RANDOM(12345)
+	brain.Brain._rand_gen = get_random
 	def get_state(world, expected):
 		for i, x in enumerate(world):
 			for j, c in enumerate(x):
@@ -503,6 +537,7 @@ if __name__ == "__main__":
 					print "exp:",expected[j + i*len(world)]
 					print "got:",string
 					print ""
+					sys.exit()
 	print "this"
 	messages_to_engine = []
 	_messages_to_runner = messages_to_runner = []

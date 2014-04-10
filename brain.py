@@ -17,6 +17,7 @@ flip p st1 st2      Choose a random number x from 0 to p-1;
 
 
 class Brain:
+    _rand_gen = lambda cls, x: random.randint(0,x) 
     def __init__(self, brain_id, states, position, color):
         self.brain_id = brain_id
         self._state = 0
@@ -27,10 +28,10 @@ class Brain:
         self._rest_time = 0
         self._color = color
         self.alive = True
-        RANDOM(12345)
         #self._rand_gen = get_random
         #self._rand_gen = make_rand_gen(random.randint(0, 10000))
-        self._rand_gen = lambda x: random.randint(0,x)
+
+
 
     @property
     def color(self):
@@ -397,20 +398,6 @@ def make_rand_gen(seed):
 
     return randomint
 
-class RANDOM():
-    def __init__(self, seed):
-        RANDOM.S = []
-        RANDOM.S.append(seed)
-
-        for i in xrange(0, 4):
-            RANDOM.S.append(RANDOM.S[-1] * 22695477 + 1)
-
-def get_random(n):
-    if n > 0:
-        x = (RANDOM.S[-1] / 65536) % 16384
-        RANDOM.S[-1] = RANDOM.S[-1] * 22695477 + 1
-
-        return int(x % n)
 
 if __name__ == "__main__":
     RANDOM(12345)
